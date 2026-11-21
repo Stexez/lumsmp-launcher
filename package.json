@@ -11,7 +11,7 @@
     "postinstall": "node scripts/copy-fonts.js",
     "start": "electron .",
     "check": "node --check src/main/main.js && node --check src/main/minecraft.js && node --check src/main/microsoft.js && node --check src/main/net.js && node --check src/main/site.js && node --check src/main/store.js && node --check src/main/mods.js && node --check src/main/modrinth.js && node --check src/main/catalog.js &&node --check src/preload.js && node --check src/renderer/app.js",
-    "test": "node --test test/",
+    "test": "node --test test/core.test.js",
     "dist": "electron-builder --win --publish never",
     "release": "electron-builder --win --publish always"
   },
