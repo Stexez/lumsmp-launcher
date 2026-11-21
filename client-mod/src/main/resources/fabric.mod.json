@@ -1,0 +1,14 @@
+{
+	"schemaVersion": 1,
+	"id": "lumsmp",
+	"version": "${version}",
+	"name": "LumSMP Client",
+	"description": "LumSMP Launcher oyun içi modu: LumSMP yükleme ekranı ve doğrudan sunucuya bağlanma.",
+	"authors": ["LumSMP"],
+	"license": "All-Rights-Reserved",
+	"icon": "assets/lumsmp/icon.png",
+	"environment": "client",
+	"entrypoints": { "client": ["tr.lumsmp.client.LumsmpClient"] },
+	"mixins": ["lumsmp.mixins.json"],
+	"depends": { "fabricloader": ">=0.20.1", "minecraft": "~26.3", "java": ">=25" }
+}

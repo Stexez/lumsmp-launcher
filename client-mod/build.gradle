@@ -1,0 +1,31 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+base { archivesName = 'lumsmp-client' }
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+	filesMatching("fabric.mod.json") { expand "version": version }
+}
+
+tasks.withType(JavaCompile).configureEach { it.options.release = 25 }
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+// Derlenen mod launcher'ın içine konur; launcher her açılışta oyuna kurar.
+tasks.register('copyToLauncher', Copy) {
+	from(tasks.named('jar'))
+	into(layout.projectDirectory.dir('../src/bundled'))
+	rename { 'lumsmp-client.jar' }
+}
+tasks.named('build') { finalizedBy 'copyToLauncher' }

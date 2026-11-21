@@ -1,0 +1,77 @@
+{
+  "name": "lumsmp-launcher",
+  "productName": "LumSMP Launcher",
+  "version": "1.1.0",
+  "description": "LumSMP Minecraft sunucusunun resmi launcher'ı",
+  "author": "LumSMP",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "src/main/main.js",
+  "scripts": {
+    "postinstall": "node scripts/copy-fonts.js",
+    "start": "electron .",
+    "check": "node --check src/main/main.js && node --check src/main/minecraft.js && node --check src/main/microsoft.js && node --check src/main/net.js && node --check src/main/site.js && node --check src/main/store.js && node --check src/main/mods.js && node --check src/main/modrinth.js && node --check src/main/catalog.js &&node --check src/preload.js && node --check src/renderer/app.js",
+    "test": "node --test test/",
+    "dist": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  },
+  "devDependencies": {
+    "@fontsource/pixelify-sans": "^5.1.0",
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "tr.lumsmp.launcher",
+    "productName": "LumSMP Launcher",
+    "copyright": "LumSMP",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "launcher.config.json",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "LumSMP-Launcher-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "LumSMP",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Stexez",
+        "repo": "lumsmp-launcher",
+        "releaseType": "release"
+      }
+    ],
+    "electronFuses": {
+      "runAsNode": false,
+      "enableCookieEncryption": true,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true
+    }
+  }
+}

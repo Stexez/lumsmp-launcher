@@ -1,0 +1,49 @@
+# Yeni sürüm: package.json'daki "version"u artır, commit'le, aynı numarayla tag at ve push'la:
+#   git tag v1.0.1 && git push origin main --tags
+# Bu iş Windows kurulum dosyasını üretip GitHub Release olarak yayınlar.
+# Oyuncuların launcher'ı bir sonraki açılışta güncellemeyi görür, indirir ve kendini günceller.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Tag ile package.json sürümü aynı mı?
+        shell: bash
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          if [ "$PKG" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} ama package.json $PKG. İkisi aynı olmalı."; exit 1
+          fi
+
+      - name: Microsoft uygulama kimliği ayarlı mı?
+        shell: bash
+        run: |
+          if grep -q "BURAYA-AZURE" launcher.config.json; then
+            echo "::warning::launcher.config.json içindeki microsoftClientId doldurulmamış; Microsoft girişi çalışmaz. Oyunculara dağıtmadan önce doldur."
+          fi
+
+      - run: npm ci
+
+      - run: npm run check
+
+      - run: npm test
+
+      - name: Derle ve yayınla
+        run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

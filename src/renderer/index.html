@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https://mc-heads.net https://cdn.modrinth.com; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+  <title>LumSMP Launcher</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-view="update">
+  <!-- ============ başlık çubuğu ============ -->
+  <header class="titlebar">
+    <div class="titlebar__brand"><img src="assets/lumsmp-mark.svg" alt=""><span>LUM<b>SMP</b></span><small data-version></small></div>
+    <div class="titlebar__buttons">
+      <button type="button" class="tb-btn" data-action="minimize" aria-label="Küçült"><span class="tb-min"></span></button>
+      <button type="button" class="tb-btn tb-btn--close" data-action="close" aria-label="Kapat"><span class="tb-x"></span></button>
+    </div>
+  </header>
+
+  <!-- ============ güncelleme ============ -->
+  <section class="screen screen--splash" data-screen="update">
+    <div class="scene" data-scene></div>
+    <div class="splash">
+      <img class="splash__block" src="assets/block-grass.svg" alt="">
+      <h1 class="logo">LUM<b>SMP</b></h1>
+      <p class="splash__text" data-update-text>Güncellemeler denetleniyor...</p>
+      <div class="pxbar pxbar--small"><div class="pxbar__fill" data-update-bar></div></div>
+    </div>
+  </section>
+
+  <!-- ============ giriş ============ -->
+  <section class="screen screen--login" data-screen="login" hidden>
+    <div class="login__art">
+      <div class="scene" data-scene></div>
+      <div class="login__pitch">
+        <span class="kicker kicker--gold">Minecraft Java · Survival</span>
+        <h1 class="logo logo--big">LUM<b>SMP</b></h1>
+        <p>Tek tıkla kur, modlarını seç, sunucuya bağlan. Launcher gerisini halleder.</p>
+        <ul class="pitch-list">
+          <li><img src="assets/px-check.svg" alt="">Oyun ve Fabric otomatik kurulur</li>
+          <li><img src="assets/px-check.svg" alt="">60'a yakın popüler modu tikle, aç</li>
+          <li><img src="assets/px-check.svg" alt="">Sunucu modları her zaman güncel</li>
+        </ul>
+      </div>
+    </div>
+    <form class="login__form" data-login-form autocomplete="on">
+      <img src="assets/block-grass.svg" alt="" class="login__block">
+      <h2 class="title">Hoş geldin!</h2>
+      <p class="muted">lumcraft.com.tr hesabınla giriş yap. Hesabın yoksa önce sitede oluştur.</p>
+      <label class="field"><span>Kullanıcı adı</span>
+        <input name="username" maxlength="16" autocomplete="username" spellcheck="false" required></label>
+      <label class="field"><span>Parola</span>
+        <input name="password" type="password" maxlength="200" autocomplete="current-password" required></label>
+      <p class="msg" data-login-msg role="status" aria-live="polite"></p>
+      <button class="btn btn--grass btn--block btn--lg" type="submit" data-login-submit>Giriş yap</button>
+      <div class="login__links">
+        <button type="button" class="link" data-open="register">Hesap oluştur</button>
+        <button type="button" class="link" data-open="forgot">Parolamı unuttum</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ uygulama ============ -->
+  <section class="screen screen--app" data-screen="app" hidden>
+    <nav class="sidebar">
+      <div class="nav">
+        <button type="button" class="nav__item" data-nav="home"><img src="assets/px-home.svg" alt="">Ana Sayfa</button>
+        <button type="button" class="nav__item" data-nav="mods"><img src="assets/px-phone.svg" alt="">Modlar<span class="nav__badge" data-mod-badge></span></button>
+        <button type="button" class="nav__item" data-nav="settings"><img src="assets/px-gear.svg" alt="">Ayarlar</button>
+      </div>
+      <div class="player">
+        <div class="player__row">
+          <div class="avatar"><img data-avatar alt="" src="assets/px-user.svg"></div>
+          <div class="player__info">
+            <strong data-player-name>—</strong>
+            <small data-player-mode></small>
+          </div>
+        </div>
+        <button type="button" class="btn btn--light btn--sm btn--block" data-ms-link><img src="assets/px-microsoft.svg" alt="" class="btn__icon">Microsoft ile giriş</button>
+      </div>
+    </nav>
+
+    <div class="main">
+      <!-- ana sayfa -->
+      <div class="page page--home" data-page="home">
+        <div class="hero">
+          <div class="scene" data-scene></div>
+          <div class="hero__content">
+            <span class="kicker kicker--gold">Minecraft Java · Survival · SMP</span>
+            <h1 class="logo logo--hero">LUM<b>SMP</b></h1>
+            <p class="hero__lead">Modların hazır, sunucu seni bekliyor. <b>OYNA</b>'ya bas, gerisini launcher halleder.</p>
+          </div>
+          <div class="hero__status"><i class="dot" data-server-dot></i><span data-server-state>Kontrol ediliyor</span></div>
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <img src="assets/px-server.svg" alt="" class="tile__icon">
+            <div><span class="tile__label">Oyuncular</span><strong data-server-players>—</strong><small data-server-meta>lumcraft.com.tr</small></div>
+          </div>
+          <button type="button" class="tile tile--link" data-nav="mods">
+            <img src="assets/px-phone.svg" alt="" class="tile__icon">
+            <div><span class="tile__label">Modlar</span><strong data-mod-summary>—</strong><small>Değiştirmek için tıkla</small></div>
+          </button>
+          <button type="button" class="tile tile--link" data-nav="settings">
+            <img src="assets/px-gear.svg" alt="" class="tile__icon">
+            <div><span class="tile__label">Bellek</span><strong data-ram-summary>—</strong><small>Ayarlardan değişir</small></div>
+          </button>
+        </div>
+        <div class="news" data-news hidden>
+          <span class="news__tag">DUYURU</span>
+          <p data-news-text></p>
+        </div>
+      </div>
+
+      <!-- modlar -->
+      <div class="page page--mods" data-page="mods" hidden>
+        <header class="page__head">
+          <div>
+            <h2 class="title">Modlar</h2>
+            <p class="muted">Tiklediğin modlar oyunla birlikte açılır. Tiklemediklerin kurulmaz, varsa silinir.</p>
+          </div>
+          <div class="page__tools">
+            <button type="button" class="btn btn--stone btn--sm" data-mods-defaults>Önerilenler</button>
+            <button type="button" class="btn btn--stone btn--sm" data-mods-none>Hepsini kapat</button>
+          </div>
+        </header>
+        <div class="filters">
+          <label class="search"><img src="assets/px-search.svg" alt=""><input type="search" placeholder="Mod ara..." data-mods-search spellcheck="false"></label>
+          <div class="chips" data-mods-chips></div>
+        </div>
+        <div class="mods" data-mods-list>
+          <p class="mods__empty">Modlar yükleniyor...</p>
+        </div>
+        <div class="required" data-required hidden>
+          <img src="assets/px-lock.svg" alt="">
+          <span><b>Sunucu modları</b> (her zaman açık): <span data-required-list></span></span>
+        </div>
+      </div>
+
+      <!-- ayarlar -->
+      <div class="page page--settings" data-page="settings" hidden>
+        <header class="page__head"><div><h2 class="title">Ayarlar</h2><p class="muted">Değişiklikler anında kaydedilir.</p></div></header>
+        <div class="panel">
+          <div class="panel__head"><h3>Bellek (RAM)</h3><b class="ram-value" data-ram-value></b></div>
+          <input type="range" data-ram min="2048" step="512">
+          <div class="ram-scale"><span>2 GB</span><span data-ram-hint></span><span data-ram-max></span></div>
+        </div>
+        <div class="panel">
+          <div class="panel__head"><h3>Hesaplar</h3></div>
+          <div class="account">
+            <img src="assets/block-grass.svg" alt="" class="account__icon">
+            <div class="account__info"><strong>LumSMP</strong><small data-acc-site></small></div>
+            <button class="btn btn--red btn--sm" type="button" data-site-logout><img src="assets/px-logout.svg" alt="" class="btn__icon">Çıkış yap</button>
+          </div>
+          <div class="account">
+            <img src="assets/px-microsoft.svg" alt="" class="account__icon">
+            <div class="account__info"><strong>Microsoft</strong><small data-acc-ms></small></div>
+            <button class="btn btn--light btn--sm" type="button" data-ms-link>Bağla</button>
+            <button class="btn btn--red btn--sm" type="button" data-ms-logout>Bağlantıyı kes</button>
+          </div>
+        </div>
+        <p class="settings__foot">LumSMP Launcher <span data-version></span> · Oyun klasörü: %APPDATA%\.lumsmp</p>
+      </div>
+
+      <!-- oyna çubuğu -->
+      <footer class="playbar">
+        <div class="progress">
+          <div class="progress__label"><span data-progress-text>Hazır</span><b data-progress-pct></b></div>
+          <div class="pxbar"><div class="pxbar__fill" data-progress-bar></div></div>
+        </div>
+        <button class="btn btn--play" type="button" data-play><img src="assets/px-play.svg" alt="" class="btn__icon"><span data-play-text>OYNA</span></button>
+      </footer>
+    </div>
+  </section>
+
+  <!-- ============ hata ============ -->
+  <div class="modal" data-error hidden>
+    <div class="modal__box">
+      <div class="modal__head"><img src="assets/block-redstone.svg" alt=""><div><span class="kicker kicker--red">Bir sorun oldu</span><h2 class="title" data-error-title>Hata</h2></div></div>
+      <p class="modal__text" data-error-text></p>
+      <pre class="log" data-error-log hidden></pre>
+      <div class="modal__actions"><button class="btn btn--grass" type="button" data-close-error>Tamam</button></div>
+    </div>
+  </div>
+
+  <div class="toast" data-toast hidden></div>
+</body>
+</html>
