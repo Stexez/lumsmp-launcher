@@ -43,7 +43,21 @@ jobs:
 
       - run: npm test
 
-      - name: Derle ve yayınla
-        run: npx electron-builder --win --publish always
+      # electron-builder's own publishing uploaded files in parallel and sometimes opened two
+      # releases for one tag (installer in one, blockmap in the other). Build first, then publish
+      # every file to exactly one release.
+      - name: Derle
+        run: npx electron-builder --win --publish never
+
+      - name: Yayınla (tek release)
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -la dist
+          for f in dist/LumSMP-Launcher-Setup.exe dist/LumSMP-Launcher-Setup.exe.blockmap dist/latest.yml; do
+            [ -f "$f" ] || { echo "$f üretilmedi"; exit 1; }
+          done
+          gh release create "$GITHUB_REF_NAME" \
+            dist/LumSMP-Launcher-Setup.exe dist/LumSMP-Launcher-Setup.exe.blockmap dist/latest.yml \
+            --title "$GITHUB_REF_NAME" --notes "LumSMP Launcher $GITHUB_REF_NAME" --verify-tag
