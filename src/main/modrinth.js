@@ -8,6 +8,20 @@ const SHA1_RE = /^[0-9a-f]{40}$/;
 const SHA512_RE = /^[0-9a-f]{128}$/;
 const CATALOG_TTL = 10 * 60 * 1000;
 
+// Seçilen bir modun "isteğe bağlı" (optional) bağımlılıkları arasında bunlar varsa onlar da kurulur:
+// modların ayar ekranlarını ve Mod Menu entegrasyonunu açan hafif kütüphaneler. Bu sürümde yoksa
+// sessizce atlanır, oyunu hiçbir zaman engellemez. (Modrinth proje kimlikleri.)
+const OPTIONAL_COMPANIONS = new Map([
+  ['9s6osm5g', 'Cloth Config API'],
+  ['1eAoo2KR', 'YetAnotherConfigLib'],
+  ['mOgUt4GM', 'Mod Menu'],
+  ['codAaoxh', 'MidnightLib'],
+  ['P7dR8mSH', 'Fabric API'],
+  ['Ha28R6CL', 'Fabric Language Kotlin'],
+  ['M1953qlQ', 'Resourceful Config'],
+  ['QAGBst4M', 'Puzzles Lib'],
+]);
+
 let catalogCache = null;   // { minecraft, at, projects: Map(slug -> project) }
 
 const q = (value) => encodeURIComponent(JSON.stringify(value));
@@ -92,6 +106,7 @@ async function resolve(selected, minecraft, skipProjects = new Set()) {
     await pool(unique, 6, async (job) => {
       if (plan.has(job.project)) return;
       const version = await bestVersion(job.project, minecraft);
+      if (!version && job.optional) return;
       if (!version && job.requiredBy) {
         // Bazı modlar yanlışlıkla Forge/kaynak paketi kütüphanelerini "gerekli" diye işaretliyor; Fabric'te zaten yüklenemezler.
         const project = await getJson(`${API}/project/${encodeURIComponent(job.project)}`).catch(() => null);
@@ -113,6 +128,9 @@ async function resolve(selected, minecraft, skipProjects = new Set()) {
         if (!ID_RE.test(dep.project_id || '')) continue;
         if (dep.dependency_type === 'required') {
           queue.push({ project: dep.project_id, slug: null, title: null, requiredBy: job.title || job.requiredBy });
+        } else if (dep.dependency_type === 'optional' && OPTIONAL_COMPANIONS.has(dep.project_id)) {
+          queue.push({ project: dep.project_id, slug: null, title: OPTIONAL_COMPANIONS.get(dep.project_id),
+            requiredBy: job.title || job.requiredBy, optional: true });
         } else if (dep.dependency_type === 'incompatible') {
           incompatible.push({ a: job.project, b: dep.project_id });
         }
@@ -134,4 +152,4 @@ async function resolve(selected, minecraft, skipProjects = new Set()) {
   });
 }
 
-module.exports = { catalogInfo, resolve, projectsOf };
+module.exports = { catalogInfo, resolve, projectsOf, OPTIONAL_COMPANIONS };
