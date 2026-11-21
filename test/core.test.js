@@ -77,3 +77,48 @@ test('modrinth hosts are allowed, others are not', () => {
 });
 
 void Module;
+
+test('category packs are valid and conflict-free', () => {
+  const { CATALOG, CATEGORIES, CATEGORY_INFO, PICKS } = require('../src/main/catalog');
+  for (const [id] of CATEGORIES) {
+    assert.ok(CATEGORY_INFO[id], `${id} açıklaması yok`);
+    const pack = PICKS[id] || [];
+    assert.ok(pack.length > 0, `${id} paketi boş`);
+    for (const slug of pack) {
+      const mod = CATALOG.find((m) => m.slug === slug);
+      assert.ok(mod, `${slug} katalogda yok`);
+      assert.strictEqual(mod.category, id, `${slug} yanlış kategoride`);
+      for (const other of mod.conflicts || []) assert.ok(!pack.includes(other), `${id} paketinde ${slug} ile ${other} çakışıyor`);
+    }
+  }
+});
+
+test('performance profiles', () => {
+  const { jvmFlags } = require('../src/main/minecraft');
+  assert.strictEqual(jvmFlags(4096, 'auto', 16).gc, 'g1');
+  assert.strictEqual(jvmFlags(8192, 'auto', 8).gc, 'zgc');
+  assert.strictEqual(jvmFlags(8192, 'auto', 4).gc, 'g1');
+  assert.strictEqual(jvmFlags(3072, 'zgc', 2).gc, 'zgc');
+  for (const ram of [2048, 3072, 4096, 6144, 16384]) {
+    const flags = jvmFlags(ram, 'g1').flags;
+    const xmx = Number(flags.find((f) => f.startsWith('-Xmx')).slice(4, -1));
+    const xms = Number(flags.find((f) => f.startsWith('-Xms')).slice(4, -1));
+    assert.strictEqual(xmx, ram);
+    assert.ok(xms >= 1024 && xms <= xmx, `${ram}: Xms ${xms}`);
+    assert.ok(flags.includes('-XX:+UseG1GC') && !flags.includes('-XX:+UseZGC'));
+  }
+});
+
+test('recommended RAM stays within the machine', () => {
+  const Module = require('module');
+  const load = Module._load;
+  Module._load = function (request, ...rest) { return request === 'electron' ? { app: { getPath: () => require('os').tmpdir() }, safeStorage: {} } : load.call(this, request, ...rest); };
+  try {
+    const { recommendedRamMb } = require('../src/main/store');
+    assert.strictEqual(recommendedRamMb(10, 8 * 1024), 4096);
+    assert.strictEqual(recommendedRamMb(10, 16 * 1024), 6144);
+    assert.strictEqual(recommendedRamMb(40, 16 * 1024), 7168);
+    assert.strictEqual(recommendedRamMb(40, 64 * 1024), 8192);
+    assert.ok(recommendedRamMb(40, 4 * 1024) <= 2048);
+  } finally { Module._load = load; }
+});

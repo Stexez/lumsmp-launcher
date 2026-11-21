@@ -17,6 +17,9 @@ contextBridge.exposeInMainWorld('lumsmp', Object.freeze({
   updateSettings: (patch) => invoke('settings:update', {
     ramMb: patch.ramMb,
     mods: Array.isArray(patch.mods) ? patch.mods.map(String) : undefined,
+    modsSetup: typeof patch.modsSetup === 'boolean' ? patch.modsSetup : undefined,
+    ramAuto: typeof patch.ramAuto === 'boolean' ? patch.ramAuto : undefined,
+    perfMode: typeof patch.perfMode === 'string' ? patch.perfMode : undefined,
   }),
   homeData: () => invoke('home:data'),
   modsCatalog: () => invoke('mods:catalog'),

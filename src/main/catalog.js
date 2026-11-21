@@ -109,6 +109,26 @@ const CATALOG = Object.freeze([
   { slug: 'sound-controller', name: 'Sound Controller', category: 'sound', desc: 'Her sesin seviyesini ayrı ayrı ayarlarsın.' },
 ]);
 
+// Kategori paketleri (OneClient tarzı "kategorini seç, kur"): ilk açılıştaki seçim ekranı ve Modlar
+// sekmesindeki "Paketi aç" bunları açar. Her paket kendi içinde çakışmasız ve hafif tutuldu.
+const CATEGORY_INFO = Object.freeze({
+  performance: 'Daha yüksek FPS, daha az takılma ve RAM. Herkese önerilir.',
+  visual: 'Dinamik ışık, 3D skin, bağlantılı cam, dalgalanan pelerin.',
+  animation: 'Birinci ve üçüncü şahısta daha canlı animasyonlar.',
+  info: 'Mini harita, dünya haritası, blok bilgisi, açlık ve dayanıklılık göstergeleri.',
+  utility: 'Hızlı envanter, yakınlaştırma, tuş ayarlarında arama.',
+  sound: 'Biyom sesleri, mağarada yankı, zemine göre ayak sesi.',
+});
+
+const PICKS = Object.freeze({
+  performance: ['sodium', 'lithium', 'ferrite-core', 'entityculling', 'immediatelyfast', 'krypton', 'moreculling', 'dynamic-fps', 'debugify', 'scalablelux'],
+  visual: ['continuity', 'lambdynamiclights', '3dskinlayers', 'entity-model-features', 'entitytexturefeatures', 'wavey-capes', 'cubes-without-borders', 'better-clouds'],
+  animation: ['punchy-fpa', 'not-enough-animations'],
+  info: ['xaeros-minimap', 'xaeros-world-map', 'jade', 'appleskin', 'durability-tooltip', 'shulkerboxtooltip', 'status-effect-bars'],
+  utility: ['modmenu', 'mouse-tweaks', 'zoomify', 'controlling', 'inventory-profiles-next'],
+  sound: ['ambientsounds', 'sound-physics-remastered', 'presence-footsteps'],
+});
+
 const BY_SLUG = new Map(CATALOG.map((mod) => [mod.slug, mod]));
 const DEFAULT_SELECTED = Object.freeze(CATALOG.filter((mod) => mod.default).map((mod) => mod.slug));
 
@@ -124,4 +144,4 @@ function sanitizeSelection(list) {
   return out;
 }
 
-module.exports = { CATALOG, CATEGORIES, BY_SLUG, DEFAULT_SELECTED, sanitizeSelection };
+module.exports = { CATALOG, CATEGORIES, CATEGORY_INFO, PICKS, BY_SLUG, DEFAULT_SELECTED, sanitizeSelection };

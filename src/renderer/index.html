@@ -144,6 +144,16 @@
           <div class="panel__head"><h3>Bellek (RAM)</h3><b class="ram-value" data-ram-value></b></div>
           <input type="range" data-ram min="2048" step="512">
           <div class="ram-scale"><span>2 GB</span><span data-ram-hint></span><span data-ram-max></span></div>
+          <label class="check"><input type="checkbox" data-ram-auto> <span>Otomatik ayarla <small class="muted" data-ram-recommended></small></span></label>
+        </div>
+        <div class="panel">
+          <div class="panel__head"><h3>Performans profili</h3></div>
+          <div class="perf" data-perf>
+            <button type="button" class="perf__opt" data-perf-mode="auto"><b>Otomatik</b><small>Bilgisayarına göre seçer</small></button>
+            <button type="button" class="perf__opt" data-perf-mode="g1"><b>Dengeli</b><small>Her bilgisayarda güvenli (G1)</small></button>
+            <button type="button" class="perf__opt" data-perf-mode="zgc"><b>Düşük takılma</b><small>8 GB+ RAM, çok çekirdek (ZGC)</small></button>
+          </div>
+          <p class="muted perf__note">Oyun "normalin üstünde" öncelikle çalışır ve launcher oyun açıkken gizlenir. İlk kurulumda V-Sync kapalı, makul görüş mesafesiyle başlar.</p>
         </div>
         <div class="panel">
           <div class="panel__head"><h3>Hesaplar</h3></div>

@@ -9,8 +9,8 @@ const microsoft = require('./microsoft');
 const minecraft = require('./minecraft');
 const { syncMods } = require('./mods');
 const modrinth = require('./modrinth');
-const { CATALOG, CATEGORIES } = require('./catalog');
-const { secrets, settings, maxRamMb } = require('./store');
+const { CATALOG, CATEGORIES, CATEGORY_INFO, PICKS } = require('./catalog');
+const { secrets, settings, maxRamMb, recommendedRamMb, PERF_MODES } = require('./store');
 
 const crypto = require('crypto');
 const RENDERER = path.join(__dirname, '..', 'renderer', 'index.html');
@@ -168,7 +168,7 @@ function publicState() {
       version: app.getVersion(), update: { state: 'ready' }, microsoftConfigured: true,
       site: DEMO === 'login' ? null : { username: 'Utku3' },
       microsoft: DEMO === 'home' || DEMO === 'settings' ? { name: 'Utku3', uuid: '069a79f444e94726a5befca90e38aaf5' } : null,
-      settings: settings.read(), maxRamMb: maxRamMb(), playing: false,
+      settings: { ...settings.read(), modsSetup: DEMO !== 'onboard' }, maxRamMb: maxRamMb(), ramRecommendedMb: recommendedRamMb(20), playing: false,
     };
   }
   const stored = secrets.read();
@@ -180,6 +180,7 @@ function publicState() {
     microsoftConfigured: microsoft.configured(),
     settings: settings.read(),
     maxRamMb: maxRamMb(),
+    ramRecommendedMb: recommendedRamMb(settings.read().mods.length),
     playing,
   };
 }
@@ -254,7 +255,7 @@ async function play() {
 
     const started = Date.now();
     const game = minecraft.launch(root, installed, {
-      auth, ramMb: opts.ramMb,
+      auth, ramMb: opts.ramMb, perfMode: opts.perfMode,
       clientMod: (await bundledMods()).some((mod) => mod.name === 'lumsmp-client.jar'),
       server: { host: manifest.server?.host || 'lumcraft.com.tr', port: manifest.server?.port || 25565 },
     });
@@ -322,8 +323,11 @@ handle('settings:update', async (patch) => {
   if (!patch || typeof patch !== 'object') throw new Error('Ayar geçersiz.');
   if (playing && patch.mods !== undefined) throw new Error('Oyun açıkken modlar değiştirilemez.');
   const clean = {};
-  if (Number.isInteger(patch.ramMb)) clean.ramMb = patch.ramMb;
+  if (Number.isInteger(patch.ramMb)) { clean.ramMb = patch.ramMb; clean.ramAuto = false; }
+  if (typeof patch.ramAuto === 'boolean') clean.ramAuto = patch.ramAuto;
+  if (PERF_MODES.includes(patch.perfMode)) clean.perfMode = patch.perfMode;
   if (Array.isArray(patch.mods) && patch.mods.length <= CATALOG.length) clean.mods = patch.mods.filter((slug) => typeof slug === 'string');
+  if (typeof patch.modsSetup === 'boolean') clean.modsSetup = patch.modsSetup;
   settings.update(clean);
   return publicState();
 });
@@ -343,7 +347,7 @@ handle('mods:catalog', async () => {
   return {
     minecraft: minecraftVersion,
     error,
-    categories: CATEGORIES.map(([id, name]) => ({ id, name })),
+    categories: CATEGORIES.map(([id, name]) => ({ id, name, desc: CATEGORY_INFO[id] || '', picks: PICKS[id] || [] })),
     required: Array.isArray(manifest?.mods) ? manifest.mods.map((mod) => String(mod.name || '').replace(/\.jar$/i, '')).slice(0, 100) : [],
     items: CATALOG.map((mod) => {
       const project = info?.get(mod.slug);

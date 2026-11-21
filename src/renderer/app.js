@@ -81,6 +81,7 @@
     show('app');
     go(page);
     startHome();
+    maybeOnboard();
   }
 
   function go(name) {
@@ -289,10 +290,7 @@
     for (const mod of items) {
       if (grouped && mod.category !== lastCat) {
         lastCat = mod.category;
-        const h = document.createElement('div');
-        h.className = 'mods__group';
-        h.textContent = modsData.categories.find((c) => c.id === mod.category)?.name || '';
-        list.append(h);
+        list.append(groupHeader(modsData.categories.find((c) => c.id === mod.category)));
       }
       list.append(modCard(mod, selected.has(mod.slug)));
     }
@@ -302,6 +300,130 @@
     $('[data-mod-badge]').textContent = selected.size ? String(selected.size) : '';
     const on = $('.chip[data-filter="on"] span');
     if (on) on.textContent = selected.size;
+  }
+
+  // ---- kategori paketleri (OneClient tarzı): bir kategorinin önerilen modlarını tek tıkla aç
+  /** Paketteki modlardan bu sürümde olan ve mevcut seçimle çakışmayanları ekler. */
+  function withPack(current, category) {
+    const next = [...current];
+    for (const slug of category?.picks || []) {
+      const mod = modsData.items.find((m) => m.slug === slug);
+      if (!mod || mod.available === false || next.includes(slug)) continue;
+      if (mod.conflicts.some((other) => next.includes(other))) continue;
+      next.push(slug);
+    }
+    return next;
+  }
+
+  function groupHeader(category) {
+    const h = document.createElement('div');
+    h.className = 'mods__group';
+    const title = document.createElement('span');
+    title.textContent = category?.name || '';
+    h.append(title);
+    if (category) {
+      const inCategory = modsData.items.filter((m) => m.category === category.id).map((m) => m.slug);
+      const selectedHere = state.settings.mods.filter((slug) => inCategory.includes(slug)).length;
+      const tools = document.createElement('span');
+      tools.className = 'mods__group-tools';
+      const pack = document.createElement('button');
+      pack.type = 'button';
+      pack.className = 'link-btn';
+      pack.textContent = 'Paketi aç';
+      pack.title = category.desc || '';
+      pack.addEventListener('click', () => {
+        if (playing) { toast('Oyun açıkken modlar değiştirilemez.'); return; }
+        const next = withPack(state.settings.mods, category);
+        const added = next.length - state.settings.mods.length;
+        setMods(next);
+        toast(added ? `${category.name} paketinden ${added} mod açıldı.` : `${category.name} paketindeki modlar zaten açık.`);
+      });
+      const off = document.createElement('button');
+      off.type = 'button';
+      off.className = 'link-btn';
+      off.textContent = 'Kapat';
+      off.disabled = selectedHere === 0;
+      off.addEventListener('click', () => {
+        if (playing) { toast('Oyun açıkken modlar değiştirilemez.'); return; }
+        setMods(state.settings.mods.filter((slug) => !inCategory.includes(slug)));
+      });
+      tools.append(pack, off);
+      h.append(tools);
+    }
+    return h;
+  }
+
+  // ---- ilk açılış: "Mod paketlerini seç"
+  let onboardingShown = false;
+  async function maybeOnboard() {
+    if (onboardingShown || !state?.site || state.settings?.modsSetup !== false || playing) return;
+    onboardingShown = true;
+    try {
+      if (!modsData) modsData = await lumsmp.modsCatalog();
+    } catch { return; }
+    if (!modsData?.items?.length || modsData.error) { onboardingShown = false; return; }
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    const box = document.createElement('div');
+    box.className = 'modal__box onboard';
+    box.innerHTML = '<div class="modal__head"><img src="assets/block-grass.svg" alt=""><div><span class="kicker">İlk kurulum</span><h2 class="title">Mod paketlerini seç</h2></div></div>'
+      + '<p class="modal__text">Hangi tür modları istiyorsun? Seçtiğin paketlerin modları OYNA\'ya basınca kurulur. Sonra Modlar sekmesinden tek tek değiştirebilirsin.</p>';
+    const grid = document.createElement('div');
+    grid.className = 'onboard__grid';
+    const preset = new Set(['performance', 'info']);
+    for (const category of modsData.categories) {
+      const count = withPack([], category).length;
+      if (!count) continue;
+      const card = document.createElement('label');
+      card.className = 'onboard__card';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = category.id;
+      input.checked = preset.has(category.id);
+      card.classList.toggle('is-on', input.checked);
+      input.addEventListener('change', () => card.classList.toggle('is-on', input.checked));
+      const name = document.createElement('strong');
+      name.textContent = `${category.name} · ${count} mod`;
+      const desc = document.createElement('span');
+      desc.textContent = category.desc || '';
+      card.append(input, name, desc);
+      grid.append(card);
+    }
+    const actions = document.createElement('div');
+    actions.className = 'modal__actions onboard__actions';
+    const skip = document.createElement('button');
+    skip.type = 'button';
+    skip.className = 'btn btn--stone';
+    skip.textContent = 'Şimdilik geç';
+    const install = document.createElement('button');
+    install.type = 'button';
+    install.className = 'btn btn--grass';
+    install.textContent = 'Seçilenleri kur';
+    actions.append(skip, install);
+    box.append(grid, actions);
+    modal.append(box);
+    document.body.append(modal);
+    const finish = async (mods) => {
+      skip.disabled = install.disabled = true;
+      try {
+        state = await lumsmp.updateSettings({ mods: mods || state.settings.mods, modsSetup: true });
+        modal.remove();
+        renderAccount();
+        if (page === 'mods') renderMods();
+        if (mods) toast(`${mods.length} mod seçildi. OYNA'ya basınca kurulacak.`);
+      } catch (error) {
+        toast(error.message);
+        skip.disabled = install.disabled = false;
+      }
+    };
+    skip.addEventListener('click', () => finish(null));
+    install.addEventListener('click', () => {
+      let next = [...state.settings.mods];
+      for (const input of grid.querySelectorAll('input:checked')) {
+        next = withPack(next, modsData.categories.find((c) => c.id === input.value));
+      }
+      finish(next);
+    });
   }
 
   function modCard(mod, isOn) {
@@ -388,8 +510,27 @@
     ram.max = String(state.maxRamMb);
     ram.value = String(state.settings.ramMb);
     $('[data-ram-max]').textContent = gb(state.maxRamMb);
+    const auto = $('[data-ram-auto]');
+    auto.checked = state.settings.ramAuto !== false;
+    $('[data-ram-recommended]').textContent = state.ramRecommendedMb ? `(önerilen ${gb(state.ramRecommendedMb)})` : '';
+    $$('[data-perf-mode]').forEach((el) => el.classList.toggle('is-active', el.dataset.perfMode === (state.settings.perfMode || 'auto')));
     ramLabel();
   }
+  $('[data-ram-auto]').addEventListener('change', async (event) => {
+    try {
+      state = await lumsmp.updateSettings({ ramAuto: event.target.checked });
+      renderSettings();
+      renderAccount();
+      if (event.target.checked) toast(`RAM otomatik: oyuna ${gb(state.settings.ramMb)} ayrılacak.`);
+    } catch (error) { toast(error.message); }
+  });
+  $$('[data-perf-mode]').forEach((el) => el.addEventListener('click', async () => {
+    try {
+      state = await lumsmp.updateSettings({ perfMode: el.dataset.perfMode });
+      renderSettings();
+      toast(`Performans profili: ${el.querySelector('b').textContent}. Bir sonraki açılışta geçerli.`);
+    } catch (error) { toast(error.message); }
+  }));
   ram.addEventListener('input', ramLabel);
   ram.addEventListener('change', async () => {
     try {

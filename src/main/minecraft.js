@@ -2,6 +2,7 @@
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
+const os = require('os');
 const { spawn } = require('child_process');
 const { getJson, download, pool, safeJoin } = require('./net');
 
@@ -176,7 +177,39 @@ function expand(args, vars, features) {
     .filter((value) => !value.includes('\u0000'));
 }
 
-function buildArgs(root, installed, { auth, ramMb, server, clientMod }) {
+/**
+ * Java bellek ve çöp toplayıcı ayarları (Modrinth App / OneClient'in kullandığı istemci ayarlarına benzer).
+ *  - g1:  ayarlanmış G1, her bilgisayarda güvenli ve dengeli.
+ *  - zgc: ZGC (Java 21+ nesilli), duraklamalar 1 ms'nin altında; bol RAM ve çok çekirdek ister.
+ *  - auto: 8 GB+ RAM ayrıldıysa ve 8+ çekirdek varsa zgc, değilse g1.
+ */
+function jvmFlags(ramMb, mode = 'auto', cores = os.cpus().length) {
+  const gc = mode === 'zgc' || mode === 'g1' ? mode : (ramMb >= 8192 && cores >= 8 ? 'zgc' : 'g1');
+  const xms = Math.min(ramMb, Math.max(1024, Math.round(ramMb / 2 / 512) * 512));
+  const common = [`-Xmx${ramMb}M`, `-Xms${xms}M`, '-XX:+UnlockExperimentalVMOptions', '-XX:+DisableExplicitGC',
+    '-XX:+PerfDisableSharedMem'];
+  if (gc === 'zgc') return { gc, flags: [...common, '-XX:+UseZGC'] };
+  return {
+    gc,
+    flags: [...common, '-XX:+UseG1GC', '-XX:G1NewSizePercent=20', '-XX:G1ReservePercent=20', '-XX:MaxGCPauseMillis=50',
+      `-XX:G1HeapRegionSize=${ramMb >= 8192 ? 32 : 16}M`, '-XX:G1MixedGCCountTarget=4', '-XX:+UseStringDeduplication'],
+  };
+}
+
+// İlk kurulumda (options.txt yokken) performans dostu oyun ayarları. Oyuncunun kendi ayarlarına asla dokunulmaz.
+const DEFAULT_OPTIONS = [
+  'lang:tr_tr', 'enableVsync:false', 'maxFps:260', 'renderDistance:10', 'simulationDistance:8',
+  'biomeBlendRadius:1', 'entityShadows:false', 'particles:1', 'mipmapLevels:2', 'autoJump:false',
+];
+
+function seedOptions(root) {
+  const file = safeJoin(root, 'options.txt');
+  if (fs.existsSync(file)) return false;
+  fs.writeFileSync(file, `${DEFAULT_OPTIONS.join('\n')}\n`, 'utf8');
+  return true;
+}
+
+function buildArgs(root, installed, { auth, ramMb, perfMode, server, clientMod }) {
   const { vanilla, profile, libraries, clientJar, logArg, id } = installed;
   const nativesDir = safeJoin(root, `versions/${id}/natives`);
   fs.mkdirSync(nativesDir, { recursive: true });
@@ -205,9 +238,8 @@ function buildArgs(root, installed, { auth, ramMb, server, clientMod }) {
   // LumSMP Client modu varsa sunucuya o bağlanır (LumSMP ekranı + çıkınca oyunu kapatma); yoksa Minecraft'ın quick play'i.
   const features = { is_quick_play_multiplayer: !clientMod };
   const jvm = [
-    `-Xmx${ramMb}M`, `-Xms${Math.min(1024, ramMb)}M`,
+    ...jvmFlags(ramMb, perfMode).flags,
     ...(clientMod ? [`-Dlumsmp.server=${server.host}:${server.port}`] : []),
-    '-XX:+UseG1GC', '-XX:+UnlockExperimentalVMOptions', '-XX:G1NewSizePercent=20', '-XX:MaxGCPauseMillis=50',
     ...expand(vanilla.arguments?.jvm || ['-Djava.library.path=${natives_directory}', '-cp', '${classpath}'], vars, features),
     ...expand(profile.arguments?.jvm, vars, features),
   ];
@@ -222,12 +254,15 @@ function buildArgs(root, installed, { auth, ramMb, server, clientMod }) {
 
 /** Starts the game. Output goes to logs/launcher-game.log (no tokens are written). */
 function launch(root, installed, options) {
+  seedOptions(root);
   const args = buildArgs(root, installed, options);
   const logDir = safeJoin(root, 'logs');
   fs.mkdirSync(logDir, { recursive: true });
   const logFile = path.join(logDir, 'launcher-game.log');
   const log = fs.createWriteStream(logFile, { flags: 'w' });
   const child = spawn(installed.javaPath, args, { cwd: root, windowsHide: false, detached: false, stdio: ['ignore', 'pipe', 'pipe'] });
+  // Oyuna arka plan programlarından önce işlemci zamanı verilsin (Windows: "Normalin üstünde").
+  try { os.setPriority(child.pid, os.constants.priority.PRIORITY_ABOVE_NORMAL); } catch { /* izin yoksa normal kalır */ }
   const tail = [];
   const collect = (chunk) => {
     const token = String(options.auth.accessToken || '');
@@ -242,4 +277,4 @@ function launch(root, installed, options) {
   return { child, tail, logFile };
 }
 
-module.exports = { install, launch, allowed, mavenPath, expand };
+module.exports = { install, launch, allowed, mavenPath, expand, jvmFlags, seedOptions, DEFAULT_OPTIONS };
