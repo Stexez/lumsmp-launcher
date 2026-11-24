@@ -57,15 +57,38 @@ function interactiveCode() {
       session.fromPartition(partition).clearStorageData().catch(() => {});
       error ? reject(error) : resolve(value);
     };
+    const isAllowedAuthHost = (target) => {
+      try {
+        const u = new URL(target);
+        if (u.protocol !== 'https:') return false;
+        const h = u.hostname.toLowerCase();
+        return h === 'login.live.com'
+          || h === 'login.microsoftonline.com'
+          || h === 'account.live.com'
+          || h === 'signup.live.com'
+          || h.endsWith('.live.com')
+          || h.endsWith('.microsoft.com')
+          || h.endsWith('.microsoftonline.com')
+          || h.endsWith('.msauth.net')
+          || h.endsWith('.msftauth.net');
+      } catch {
+        return false;
+      }
+    };
     const inspect = (event, target) => {
-      if (!target.startsWith(MS_REDIRECT)) return;
-      if (event && event.preventDefault) event.preventDefault();
-      const params = new URL(target).searchParams;
-      if (params.get('state') !== state) return finish(new Error('Microsoft girişi doğrulanamadı (state).'));
-      if (params.get('error')) return finish(new Error(params.get('error_description') || 'Microsoft girişi iptal edildi.'));
-      const code = params.get('code');
-      if (!code) return finish(new Error('Microsoft giriş kodu alınamadı.'));
-      finish(null, { code, verifier });
+      if (target.startsWith(MS_REDIRECT)) {
+        if (event && event.preventDefault) event.preventDefault();
+        const params = new URL(target).searchParams;
+        if (params.get('state') !== state) return finish(new Error('Microsoft girişi doğrulanamadı (state).'));
+        if (params.get('error')) return finish(new Error(params.get('error_description') || 'Microsoft girişi iptal edildi.'));
+        const code = params.get('code');
+        if (!code) return finish(new Error('Microsoft giriş kodu alınamadı.'));
+        finish(null, { code, verifier });
+        return;
+      }
+      if (event && event.preventDefault && !isAllowedAuthHost(target)) {
+        event.preventDefault();
+      }
     };
     win.webContents.on('will-redirect', (event, target) => inspect(event, target));
     win.webContents.on('will-navigate', (event, target) => inspect(event, target));

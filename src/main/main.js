@@ -254,10 +254,14 @@ async function play() {
     progress('launch', 1, 1);
 
     const started = Date.now();
+    const rawHost = typeof manifest.server?.host === 'string' ? manifest.server.host.trim() : '';
+    const safeHost = /^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$/.test(rawHost) ? rawHost : 'lumcraft.com.tr';
+    const rawPort = Number(manifest.server?.port);
+    const safePort = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 25565;
     const game = minecraft.launch(root, installed, {
       auth, ramMb: opts.ramMb, perfMode: opts.perfMode,
       clientMod: (await bundledMods()).some((mod) => mod.name === 'lumsmp-client.jar'),
-      server: { host: manifest.server?.host || 'lumcraft.com.tr', port: manifest.server?.port || 25565 },
+      server: { host: safeHost, port: safePort },
     });
     gameProcess = game.child;
     const heartbeat = setInterval(() => { site.play(stored.siteToken, auth.name).catch(() => {}); }, 60000);

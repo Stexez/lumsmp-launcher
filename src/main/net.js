@@ -42,8 +42,16 @@ function request(url, options = {}, redirects = 0) {
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
         res.resume();
         if (redirects >= 5) return reject(new Error('Çok fazla yönlendirme.'));
-        const next = new URL(res.headers.location, parsed).toString();
-        return request(next, options, redirects + 1).then(resolve, reject);
+        const nextUrl = new URL(res.headers.location, parsed);
+        let nextOptions = options;
+        if (nextUrl.hostname !== parsed.hostname && options.headers) {
+          const filtered = {};
+          for (const [k, v] of Object.entries(options.headers)) {
+            if (!['authorization', 'cookie'].includes(k.toLowerCase())) filtered[k] = v;
+          }
+          nextOptions = { ...options, headers: filtered };
+        }
+        return request(nextUrl.toString(), nextOptions, redirects + 1).then(resolve, reject);
       }
       const chunks = [];
       let total = 0;
@@ -87,18 +95,28 @@ async function download(url, dest, expect = {}, headers = {}, onBytes = () => {}
   const existing = await fsp.stat(dest).catch(() => null);
   if (existing && existing.isFile() && (expect.size == null || existing.size === expect.size)) {
     if (expect.trustSize && expect.size != null) return false;
-    if (expect.sha1 && await fileHash(dest, 'sha1') === expect.sha1) return false;
-    if (expect.sha512 && await fileHash(dest, 'sha512') === expect.sha512) return false;
-    if (!expect.sha512 && expect.sha1 && await fileHash(dest, 'sha1') === expect.sha1) return false;
-    if (expect.sha256 && await fileHash(dest, 'sha256') === expect.sha256) return false;
-    if (!expect.sha1 && !expect.sha256 && !expect.sha512 && expect.size != null) return false;
+    const checks = [
+      expect.sha512 ? ['sha512', expect.sha512] : null,
+      expect.sha256 ? ['sha256', expect.sha256] : null,
+      expect.sha1 ? ['sha1', expect.sha1] : null,
+    ].filter(Boolean);
+    if (checks.length > 0) {
+      let allMatch = true;
+      for (const [alg, expected] of checks) {
+        if (await fileHash(dest, alg) !== expected) { allMatch = false; break; }
+      }
+      if (allMatch) return false;
+    } else if (expect.size != null) {
+      return false;
+    }
   }
   await fsp.mkdir(path.dirname(dest), { recursive: true });
+  const maxBytes = expect.size != null ? expect.size : (expect.maxBytes || 512 * 1024 * 1024);
   let lastError;
   for (let attempt = 1; attempt <= 3; attempt++) {
     const part = `${dest}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.part`;
     try {
-      await streamTo(url, part, headers, onBytes);
+      await streamTo(url, part, headers, onBytes, 0, maxBytes);
       const stat = await fsp.stat(part);
       if (expect.size != null && stat.size !== expect.size) throw new Error('Dosya boyutu tutmuyor.');
       if (expect.sha1 && await fileHash(part, 'sha1') !== expect.sha1) throw new Error('SHA-1 doğrulaması başarısız.');
@@ -115,7 +133,7 @@ async function download(url, dest, expect = {}, headers = {}, onBytes = () => {}
   throw new Error(`${path.basename(dest)} indirilemedi: ${lastError.message}`);
 }
 
-function streamTo(url, file, headers, onBytes, redirects = 0) {
+function streamTo(url, file, headers, onBytes, redirects = 0, maxBytes = 512 * 1024 * 1024) {
   const parsed = checkUrl(url);
   return new Promise((resolve, reject) => {
     const req = https.get(parsed, { headers: { 'User-Agent': USER_AGENT, ...headers }, timeout: 60000 }, (res) => {
@@ -125,11 +143,20 @@ function streamTo(url, file, headers, onBytes, redirects = 0) {
         // Auth headers are only ever sent to the original host.
         const next = new URL(res.headers.location, parsed);
         const nextHeaders = next.hostname === parsed.hostname ? headers : {};
-        return streamTo(next.toString(), file, nextHeaders, onBytes, redirects + 1).then(resolve, reject);
+        return streamTo(next.toString(), file, nextHeaders, onBytes, redirects + 1, maxBytes).then(resolve, reject);
       }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error(`HTTP ${res.statusCode}`)); }
       const out = fs.createWriteStream(file);
-      res.on('data', (chunk) => onBytes(chunk.length));
+      let total = 0;
+      res.on('data', (chunk) => {
+        total += chunk.length;
+        if (total > maxBytes) {
+          req.destroy(new Error('İndirilen dosya izin verilen boyutu aşıyor.'));
+          out.destroy();
+          return;
+        }
+        onBytes(chunk.length);
+      });
       res.pipe(out);
       out.on('finish', resolve);
       out.on('error', reject);
