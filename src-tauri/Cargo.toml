@@ -30,6 +30,7 @@ url = "2"
 sysinfo = "0.33"
 dirs = "5"
 chrono = "0.4"
+discord-rich-presence = "0.2"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = ["Win32_Security_Cryptography", "Win32_Foundation", "Win32_System_Memory"] }

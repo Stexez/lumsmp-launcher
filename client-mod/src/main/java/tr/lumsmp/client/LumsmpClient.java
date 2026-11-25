@@ -27,6 +27,7 @@ public final class LumsmpClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		tr.lumsmp.client.hud.HudConfig.load();
 	}
 
 	public static boolean active() {

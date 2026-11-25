@@ -7,6 +7,8 @@
 		"ClientPacketListenerMixin",
 		"DisconnectedScreenAccessor",
 		"GuiMixin",
+		"HudMixin",
+		"KeyboardHandlerMixin",
 		"LevelLoadingScreenMixin",
 		"LoadingOverlayMixin",
 		"ScreenMixin"

@@ -8,13 +8,12 @@
 </head>
 <body>
   <div class="shell">
-    <!-- Custom Frameless Titlebar -->
     <header class="titlebar" data-tauri-drag-region>
       <div class="brand" data-tauri-drag-region>
         <span class="brand-dot"></span>
         <span class="brand-lum">LUM</span><span class="brand-smp">SMP</span>
         <span class="badge-ver" id="verBadge">v2.0.0</span>
-        <span class="badge-engine">Rust · Tauri</span>
+        <span class="badge-engine">OneClient · Rust</span>
       </div>
       <div class="win-controls">
         <button class="win-btn" id="btnMin" title="Küçült">—</button>
@@ -23,17 +22,18 @@
     </header>
 
     <div class="workspace">
-      <!-- Left Navigation Rail -->
       <aside class="sidebar">
         <nav class="nav">
           <button class="nav-item active" data-tab="home"><span class="ico">✦</span> Ana Sayfa</button>
           <button class="nav-item" data-tab="mods"><span class="ico">❖</span> Modlar</button>
-          <button class="nav-item" data-tab="media"><span class="ico">◈</span> Shader & Galeri</button>
+          <button class="nav-item" data-tab="shaders"><span class="ico">☀</span> Shaderlar</button>
+          <button class="nav-item" data-tab="gallery"><span class="ico">◈</span> Galeri (F2)</button>
+          <button class="nav-item" data-tab="logs"><span class="ico">▤</span> Oyun Logu</button>
           <button class="nav-item" data-tab="settings"><span class="ico">⚙</span> Ayarlar</button>
         </nav>
 
         <div class="sidebar-footer">
-          <div class="account-pill" id="sideAccount">
+          <div class="account-pill">
             <img class="avatar" id="sideAvatar" src="" alt="" hidden />
             <div class="acc-meta">
               <div class="acc-name" id="sideName">Giriş Yapılmadı</div>
@@ -43,16 +43,16 @@
         </div>
       </aside>
 
-      <!-- Main Content -->
       <main class="content">
-        <!-- HOME TAB -->
+        <!-- HOME -->
         <section class="panel active" id="tab-home">
           <div class="hero">
+            <div class="banner-notice" id="announcementBar" hidden></div>
             <div class="hero-top">
               <div>
                 <div class="status-chip"><span class="pulse"></span> <span id="serverStatusText">Sunucu kontrol ediliyor…</span></div>
                 <h1 class="hero-title">LUM SMP <span class="accent">26.3</span></h1>
-                <p class="hero-sub">OneClient mimarili ultra hafif Rust launcher · Otomatik Fabric, Java 25 ve SHA-256 doğrulama.</p>
+                <p class="hero-sub">OneClient mimarili ultra hafif Rust launcher · Oyun içi Sağ Shift HUD, otomatik Fabric & Java 25.</p>
               </div>
               <div class="profile-pills">
                 <div class="pill-label">Performans Profili</div>
@@ -65,23 +65,26 @@
             </div>
 
             <div class="cards-grid">
-              <div class="glass-card" id="siteCard">
+              <div class="glass-card">
                 <div class="card-kicker">LUMCRAFT HESABI</div>
                 <div class="card-val" id="siteUserVal">Bağlı değil</div>
+                <div class="card-sub" id="siteStatsVal">Lumin & VIP bilgisi için giriş yap</div>
                 <div class="card-actions">
                   <button class="btn ghost" id="btnSiteAuth">Giriş Yap</button>
                 </div>
               </div>
-              <div class="glass-card" id="msCard">
+              <div class="glass-card">
                 <div class="card-kicker">MİNECRAFT (MİCROSOFT)</div>
                 <div class="card-val" id="msUserVal">Bağlı değil</div>
+                <div class="card-sub" id="msSubVal">Orijinal Minecraft hesabı gerekir</div>
                 <div class="card-actions">
                   <button class="btn ghost" id="btnMsAuth">Microsoft Bağla</button>
                 </div>
               </div>
               <div class="glass-card">
-                <div class="card-kicker">SEÇİLİ MODLAR & RAM</div>
+                <div class="card-kicker">KURULUM & PERFORMANS</div>
                 <div class="card-val" id="setupSummary">7 Mod · 4 GB RAM</div>
+                <div class="card-sub">Sağ Shift ile oyun içi HUD menüsü</div>
                 <div class="card-actions">
                   <button class="btn ghost" id="btnOpenGameDir">Oyun Klasörü</button>
                 </div>
@@ -100,56 +103,83 @@
           </div>
         </section>
 
-        <!-- MODS TAB -->
+        <!-- MODS -->
         <section class="panel" id="tab-mods">
           <div class="panel-head">
             <div>
               <h2>İzinli İstemci Modları</h2>
-              <p class="muted">Zorunlu sunucu modları (LumPhone, VoiceChat, Fabric API) otomatik kurulur. Opsiyonel modları buradan seç.</p>
+              <p class="muted">Zorunlu modlar (LumPhone, VoiceChat, Fabric API) otomatik kurulur.</p>
             </div>
             <input class="search" id="modSearch" type="text" placeholder="Mod ara…" />
+          </div>
+          <div class="preset-bar">
+            <span class="muted">Hızlı Paketler:</span>
+            <button class="btn ghost" id="presetFps">⚡ Ultra FPS</button>
+            <button class="btn ghost" id="presetVanilla">✦ Vanilla+</button>
+            <button class="btn ghost" id="presetShader">☀ Shader Hazır</button>
+            <button class="btn ghost" id="presetReset">↺ Varsayılan</button>
           </div>
           <div class="cat-bar" id="modCats"></div>
           <div class="mod-grid" id="modGrid"></div>
         </section>
 
-        <!-- SHADERS & SCREENSHOTS TAB -->
-        <section class="panel" id="tab-media">
+        <!-- SHADERS -->
+        <section class="panel" id="tab-shaders">
           <div class="panel-head">
             <div>
-              <h2>Shader Paketleri & Ekran Görüntüleri</h2>
-              <p class="muted">Oyun içi shader paketlerin ve F2 ekran görüntülerin.</p>
+              <h2>Shader Mağazası (Modrinth)</h2>
+              <p class="muted">Tek tıkla indir — kullanmak için Modlar sekmesinden Iris Shaders'ı aç.</p>
             </div>
-            <div class="row-gap">
-              <button class="btn ghost" id="btnOpenShaders">Shader Klasörü</button>
-              <button class="btn ghost" id="btnOpenShots">Ekran Görüntüleri</button>
-            </div>
+            <button class="btn ghost" id="btnOpenShaders">Shader Klasörü</button>
           </div>
-          <div class="split-2">
-            <div class="glass-card tall">
-              <div class="card-kicker">YÜKLÜ SHADER PAKETLERİ</div>
-              <div class="file-list" id="shaderList"></div>
-            </div>
-            <div class="glass-card tall">
-              <div class="card-kicker">EKRAN GÖRÜNTÜLERİ (F2)</div>
-              <div class="file-list" id="shotList"></div>
-            </div>
+          <div class="alert ok" id="shaderNotice" hidden></div>
+          <div class="mod-grid" id="shaderStore"></div>
+          <div class="glass-card" style="margin-top:auto">
+            <div class="card-kicker">YÜKLÜ SHADER PAKETLERİ</div>
+            <div class="file-list compact" id="shaderList"></div>
           </div>
         </section>
 
-        <!-- SETTINGS TAB -->
+        <!-- GALLERY -->
+        <section class="panel" id="tab-gallery">
+          <div class="panel-head">
+            <div>
+              <h2>Ekran Görüntüsü Galerisi (F2)</h2>
+              <p class="muted">Oyunda F2 ile çektiğin ekran görüntüleri.</p>
+            </div>
+            <button class="btn ghost" id="btnOpenShots">Klasörü Aç</button>
+          </div>
+          <div class="shot-grid" id="shotGrid"></div>
+        </section>
+
+        <!-- LOGS -->
+        <section class="panel" id="tab-logs">
+          <div class="panel-head">
+            <div>
+              <h2>Canlı Oyun Log Konsolu</h2>
+              <p class="muted">Oyun çıktısı (erişim anahtarları otomatik maskelenir).</p>
+            </div>
+            <div class="row-gap">
+              <button class="btn ghost" id="btnRefreshLogs">Yenile</button>
+              <button class="btn primary" id="btnCopyLogs">Logu Kopyala</button>
+            </div>
+          </div>
+          <pre class="log-box" id="logBox">Yükleniyor…</pre>
+        </section>
+
+        <!-- SETTINGS -->
         <section class="panel" id="tab-settings">
           <div class="panel-head">
             <div>
               <h2>Launcher & Java Ayarları</h2>
-              <p class="muted">Bellek, çöp toplayıcı (GC) ve pencere davranışı.</p>
+              <p class="muted">Bellek, çöp toplayıcı (GC), Discord Rich Presence ve pencere davranışı.</p>
             </div>
           </div>
           <div class="settings-list">
             <div class="glass-card setting-row">
               <div>
                 <div class="setting-title">Otomatik RAM Ayarı</div>
-                <div class="muted">Bilgisayarının belleğine göre en akıcı RAM miktarını otomatik seçer.</div>
+                <div class="muted">Bilgisayarının belleğine göre en akıcı RAM miktarını seçer.</div>
               </div>
               <label class="switch"><input type="checkbox" id="setRamAuto" /><span></span></label>
             </div>
@@ -173,8 +203,15 @@
             </div>
             <div class="glass-card setting-row">
               <div>
+                <div class="setting-title">Discord Rich Presence</div>
+                <div class="muted">Discord profilinde canlı olarak LumSMP oynadığını gösterir.</div>
+              </div>
+              <label class="switch"><input type="checkbox" id="setDiscordRpc" /><span></span></label>
+            </div>
+            <div class="glass-card setting-row">
+              <div>
                 <div class="setting-title">Oyun Açılınca Küçült</div>
-                <div class="muted">Minecraft başlayınca launcher arka plana alınır, kapanınca geri gelir.</div>
+                <div class="muted">Minecraft başlayınca launcher arka plana alınır.</div>
               </div>
               <label class="switch"><input type="checkbox" id="setMinLaunch" /><span></span></label>
             </div>
@@ -196,6 +233,17 @@
         <button class="btn ghost" id="btnLoginCancel">İptal</button>
         <button class="btn primary" id="btnLoginSubmit">Giriş Yap</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Screenshot Lightbox -->
+  <div class="modal-backdrop" id="shotModal" hidden>
+    <div class="modal wide">
+      <div class="panel-head">
+        <h3 id="shotModalTitle">Ekran Görüntüsü</h3>
+        <button class="btn ghost" id="btnShotClose">Kapat</button>
+      </div>
+      <img id="shotModalImg" class="lightbox-img" src="" alt="" />
     </div>
   </div>
 

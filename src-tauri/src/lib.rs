@@ -2,11 +2,13 @@ mod config;
 mod microsoft;
 mod minecraft;
 mod mods;
+mod rpc;
 mod site;
 mod store;
 
 use config::AppConfig;
 use microsoft::MinecraftAuth;
+use rpc::RpcManager;
 use serde::Serialize;
 use serde_json::{json, Value};
 use site::SiteClient;
@@ -19,6 +21,7 @@ struct AppState {
     cfg: AppConfig,
     mc_auth: Mutex<Option<MinecraftAuth>>,
     playing: Mutex<bool>,
+    rpc: RpcManager,
 }
 
 #[derive(Serialize)]
@@ -29,6 +32,7 @@ struct BootstrapPayload {
     ms_configured: bool,
     site_user: Option<Value>,
     mc_profile: Option<Value>,
+    announcement: Option<String>,
     settings: Settings,
     max_ram_mb: u32,
     recommended_ram_mb: u32,
@@ -65,8 +69,14 @@ async fn bootstrap(state: State<'_, AppState>) -> Result<BootstrapPayload, Strin
     let secrets = read_secrets();
     let settings = read_settings();
     let client = SiteClient::new(&state.cfg)?;
+    let mut announcement = None;
     let site_user = match secrets.site_token.as_deref() {
-        Some(tok) if !tok.is_empty() => client.me(tok).await.ok(),
+        Some(tok) if !tok.is_empty() => {
+            if let Ok(m) = client.manifest(tok).await {
+                announcement = m.announcement;
+            }
+            client.me(tok).await.ok()
+        }
         _ => None,
     };
     let mut mc_profile = None;
@@ -82,12 +92,18 @@ async fn bootstrap(state: State<'_, AppState>) -> Result<BootstrapPayload, Strin
         }
     }
     let playing = *state.playing.lock().unwrap();
+    state.rpc.set_status(
+        settings.discord_rpc,
+        if playing { "LumSMP Oynuyor" } else { "LumSMP Launcher" },
+        if playing { "lumcraft.com.tr" } else { "Oyuna hazırlanıyor" },
+    );
     Ok(BootstrapPayload {
         version: env!("CARGO_PKG_VERSION").into(),
         site_origin: state.cfg.site_origin.clone(),
         ms_configured: state.cfg.ms_configured(),
         site_user,
         mc_profile,
+        announcement,
         max_ram_mb: store::max_ram_mb(),
         recommended_ram_mb: store::recommended_ram_mb(settings.mods.len()),
         settings,
@@ -149,8 +165,40 @@ fn get_catalog() -> Vec<mods::CatalogMod> {
 }
 
 #[tauri::command]
-fn save_settings(next: Settings) -> Result<Settings, String> {
-    write_settings(next)
+fn get_shader_catalog() -> Vec<mods::ShaderItem> {
+    mods::shader_catalog()
+}
+
+#[tauri::command]
+async fn install_shader(state: State<'_, AppState>, slug: String) -> Result<String, String> {
+    mods::install_shader(&store::game_dir(), &state.cfg, &slug).await
+}
+
+#[tauri::command]
+fn read_screenshot_data(name: String) -> Result<String, String> {
+    mods::read_screenshot_data_url(&store::game_dir(), &name)
+}
+
+#[tauri::command]
+fn delete_media(sub: String, name: String) -> Result<(), String> {
+    mods::delete_media_file(&store::game_dir(), &sub, &name)
+}
+
+#[tauri::command]
+fn read_game_log() -> String {
+    mods::read_game_log_tail(&store::game_dir())
+}
+
+#[tauri::command]
+fn save_settings(state: State<'_, AppState>, next: Settings) -> Result<Settings, String> {
+    let saved = write_settings(next)?;
+    let playing = *state.playing.lock().unwrap();
+    state.rpc.set_status(
+        saved.discord_rpc,
+        if playing { "LumSMP Oynuyor" } else { "LumSMP Launcher" },
+        if playing { "lumcraft.com.tr" } else { "Oyuna hazırlanıyor" },
+    );
+    Ok(saved)
 }
 
 #[tauri::command]
@@ -248,6 +296,12 @@ async fn launch_game(app: AppHandle, state: State<'_, AppState>) -> Result<Value
             has_client_mod,
         )?;
 
+        state.rpc.set_status(
+            settings.discord_rpc,
+            &format!("LumSMP Oynuyor · {}", mc_auth.name),
+            "lumcraft.com.tr",
+        );
+
         if settings.minimize_on_launch {
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.minimize();
@@ -256,11 +310,13 @@ async fn launch_game(app: AppHandle, state: State<'_, AppState>) -> Result<Value
 
         let app_exit = app.clone();
         let root_exit = root.clone();
+        let rpc_enabled = settings.discord_rpc;
         std::thread::spawn(move || {
             let code = child.wait().ok().and_then(|s| s.code()).unwrap_or(-1);
             let crash_hint = if code != 0 { minecraft::analyze_crash(&root_exit) } else { None };
             if let Some(st) = app_exit.try_state::<AppState>() {
                 *st.playing.lock().unwrap() = false;
+                st.rpc.set_status(rpc_enabled, "LumSMP Launcher", "Oyuna hazırlanıyor");
             }
             if let Some(w) = app_exit.get_webview_window("main") {
                 let _ = w.unminimize();
@@ -291,6 +347,7 @@ pub fn run() {
                 cfg,
                 mc_auth: Mutex::new(None),
                 playing: Mutex::new(false),
+                rpc: RpcManager::new(),
             });
             Ok(())
         })
@@ -302,6 +359,11 @@ pub fn run() {
             ms_logout,
             get_server_status,
             get_catalog,
+            get_shader_catalog,
+            install_shader,
+            read_screenshot_data,
+            delete_media,
+            read_game_log,
             save_settings,
             list_screenshots,
             list_shaders,

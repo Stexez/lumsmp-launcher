@@ -20,7 +20,11 @@ pub struct Settings {
     pub mods: Vec<String>,
     pub mods_setup: bool,
     pub minimize_on_launch: bool,
+    #[serde(default = "default_true")]
+    pub discord_rpc: bool,
 }
+
+fn default_true() -> bool { true }
 
 impl Default for Settings {
     fn default() -> Self {
@@ -34,6 +38,7 @@ impl Default for Settings {
             mods,
             mods_setup: false,
             minimize_on_launch: true,
+            discord_rpc: true,
         }
     }
 }

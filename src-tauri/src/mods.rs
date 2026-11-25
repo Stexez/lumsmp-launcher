@@ -30,6 +30,93 @@ pub struct MediaEntry {
     pub size_kb: u64,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct ShaderItem {
+    pub slug: String,
+    pub name: String,
+    pub desc: String,
+    pub tier: String,
+}
+
+pub fn shader_catalog() -> Vec<ShaderItem> {
+    let s = |slug: &str, name: &str, desc: &str, tier: &str| ShaderItem {
+        slug: slug.into(),
+        name: name.into(),
+        desc: desc.into(),
+        tier: tier.into(),
+    };
+    vec![
+        s("makeup-ultra-fast-shaders", "MakeUp - Ultra Fast", "Düşük sistemlerde bile akıcı çalışan hafif shader.", "Hafif"),
+        s("complementary-unbound", "Complementary Unbound", "En popüler, net ve gerçekçi su/bulut shader paketi.", "Dengeli"),
+        s("complementary-reimagined", "Complementary Reimagined", "Vanilla atmosferini koruyan yüksek kaliteli shader.", "Dengeli"),
+        s("bsl-shaders", "BSL Shaders", "Sıcak ışıklandırma ve yumuşak gölgeler.", "Dengeli"),
+        s("solas-shader", "Solas Shaders", "Sinematik gökyüzü, aurora ve hacimsel ışık.", "Yüksek"),
+        s("sildurs-vibrant-shaders", "Sildur's Vibrant", "Canlı renkler ve dinamik gölgeler.", "Orta"),
+    ]
+}
+
+pub async fn install_shader(root: &Path, cfg: &AppConfig, slug: &str) -> Result<String, String> {
+    let http = Client::builder()
+        .timeout(Duration::from_secs(45))
+        .user_agent("LumSMP-Launcher/2.0")
+        .build()
+        .map_err(|e| format!("HTTP hatası: {e}"))?;
+    let url = format!("https://api.modrinth.com/v2/project/{slug}/version?loaders=%5B%22iris%22%5D");
+    let resp = http.get(&url).send().await.map_err(|e| format!("Modrinth bağlantısı başarısız: {e}"))?;
+    if !resp.status().is_success() {
+        return Err("Shader paketi Modrinth'te bulunamadı.".into());
+    }
+    let arr: Vec<Value> = resp.json().await.map_err(|_| "Shader listesi okunamadı.".to_string())?;
+    let ver = arr.first().ok_or("Bu shader için uygun sürüm yok.")?;
+    let files = ver.get("files").and_then(|v| v.as_array()).ok_or("Shader dosyası bulunamadı.")?;
+    let primary = files.iter().find(|f| f.get("primary").and_then(|b| b.as_bool()) == Some(true)).or_else(|| files.first()).ok_or("Dosya yok.")?;
+    let fname = primary.get("filename").and_then(|v| v.as_str()).ok_or("Dosya adı yok.")?;
+    let furl = primary.get("url").and_then(|v| v.as_str()).ok_or("İndirme linki yok.")?;
+    let size = primary.get("size").and_then(|v| v.as_u64());
+    let dir = safe_join(root, "shaderpacks")?;
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let target = safe_join(&dir, fname)?;
+    download_file(&http, cfg, furl, &target, None, None, size, None).await?;
+    Ok(fname.to_string())
+}
+
+pub fn read_screenshot_data_url(root: &Path, name: &str) -> Result<String, String> {
+    use base64::engine::general_purpose::STANDARD;
+    use base64::Engine;
+    let target = safe_join(root, &format!("screenshots/{name}"))?;
+    let bytes = fs::read(&target).map_err(|e| format!("Görüntü okunamadı: {e}"))?;
+    if bytes.len() > 8 * 1024 * 1024 {
+        return Err("Dosya çok büyük.".into());
+    }
+    let mime = if name.to_lowercase().ends_with(".jpg") || name.to_lowercase().ends_with(".jpeg") {
+        "image/jpeg"
+    } else {
+        "image/png"
+    };
+    Ok(format!("data:{mime};base64,{}", STANDARD.encode(bytes)))
+}
+
+pub fn delete_media_file(root: &Path, sub: &str, name: &str) -> Result<(), String> {
+    if !matches!(sub, "shaderpacks" | "screenshots") {
+        return Err("İzin verilmeyen klasör.".into());
+    }
+    let target = safe_join(root, &format!("{sub}/{name}"))?;
+    if target.is_file() {
+        fs::remove_file(&target).map_err(|e| format!("Silinemedi: {e}"))?;
+    }
+    Ok(())
+}
+
+pub fn read_game_log_tail(root: &Path) -> String {
+    let path = root.join("logs").join("launcher-game.log");
+    let Ok(text) = fs::read_to_string(&path) else {
+        return "Henüz oyun kaydı yok. Oyunu başlattığında loglar burada canlı görünür.".into();
+    };
+    let lines: Vec<&str> = text.lines().collect();
+    let start = lines.len().saturating_sub(140);
+    lines[start..].join("\n")
+}
+
 pub fn catalog() -> Vec<CatalogMod> {
     let m = |slug: &str, name: &str, category: &str, desc: &str, default_on: bool, conflicts: &[&str]| CatalogMod {
         slug: slug.into(),
