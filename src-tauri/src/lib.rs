@@ -221,14 +221,17 @@ fn read_game_log() -> String {
 }
 
 #[tauri::command]
-fn save_settings(state: State<'_, AppState>, next: Settings) -> Result<Settings, String> {
+async fn save_settings(state: State<'_, AppState>, next: Settings) -> Result<Settings, String> {
+    let prev = read_settings();
     let saved = write_settings(next)?;
-    let playing = *state.playing.lock().unwrap();
-    state.rpc.set_status(
-        saved.discord_rpc,
-        if playing { "LumSMP Oynuyor" } else { "LumSMP Launcher" },
-        if playing { "lumcraft.com.tr" } else { "Oyuna hazırlanıyor" },
-    );
+    if prev.discord_rpc != saved.discord_rpc {
+        let playing = *state.playing.lock().unwrap();
+        state.rpc.set_status(
+            saved.discord_rpc,
+            if playing { "LumSMP Oynuyor" } else { "LumSMP Launcher" },
+            if playing { "lumcraft.com.tr" } else { "Oyuna hazırlanıyor" },
+        );
+    }
     Ok(saved)
 }
 

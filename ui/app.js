@@ -251,9 +251,14 @@ async function refreshLogs() {
 }
 
 async function updateSettings(patch) {
-  const next = { ...state.data.settings, ...patch };
-  state.data.settings = await invoke('save_settings', { next });
-  render();
+  if (!state.data?.settings) return;
+  try {
+    const next = { ...state.data.settings, ...patch };
+    state.data.settings = await invoke('save_settings', { next });
+    render();
+  } catch (err) {
+    showError(`Ayarlar kaydedilemedi: ${err}`);
+  }
 }
 
 async function refreshStatus() {
