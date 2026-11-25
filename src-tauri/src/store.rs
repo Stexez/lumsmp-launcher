@@ -138,7 +138,7 @@ fn sanitize_settings(s: &mut Settings) {
 #[cfg(windows)]
 fn dpapi_protect(plain: &[u8]) -> Result<Vec<u8>, String> {
     use windows_sys::Win32::Security::Cryptography::{CryptProtectData, CRYPT_INTEGER_BLOB};
-    use windows_sys::Win32::System::Memory::LocalFree;
+    use windows_sys::Win32::Foundation::LocalFree;
     unsafe {
         let input = CRYPT_INTEGER_BLOB {
             cbData: plain.len() as u32,
@@ -170,7 +170,7 @@ fn dpapi_protect(plain: &[u8]) -> Result<Vec<u8>, String> {
 #[cfg(windows)]
 fn dpapi_unprotect(cipher: &[u8]) -> Result<Vec<u8>, String> {
     use windows_sys::Win32::Security::Cryptography::{CryptUnprotectData, CRYPT_INTEGER_BLOB};
-    use windows_sys::Win32::System::Memory::LocalFree;
+    use windows_sys::Win32::Foundation::LocalFree;
     unsafe {
         let input = CRYPT_INTEGER_BLOB {
             cbData: cipher.len() as u32,
