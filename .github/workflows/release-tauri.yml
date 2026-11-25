@@ -27,7 +27,18 @@ jobs:
 
       - name: Build LumSMP Launcher (NSIS)
         working-directory: src-tauri
-        run: cargo tauri build --bundles nsis
+        shell: pwsh
+        env:
+          CARGO_TERM_COLOR: never
+        run: |
+          $ErrorActionPreference = 'Continue'
+          cargo tauri build --bundles nsis *>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/build.log"
+          if ($LASTEXITCODE -ne 0) {
+            $lines = Get-Content "$env:RUNNER_TEMP/build.log" | Where-Object { $_ -match '^(error|warning: unused)|^\s*-->|^\s*\d+ \||^\s*= (note|help)' } | Select-Object -First 60
+            $msg = ($lines -join '%0A')
+            Write-Host "::error title=Build hatasi::$msg"
+            exit 1
+          }
 
       - name: Prepare release artifacts (Setup EXE + SHA-256)
         shell: pwsh
