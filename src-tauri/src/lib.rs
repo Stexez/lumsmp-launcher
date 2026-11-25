@@ -84,7 +84,7 @@ async fn bootstrap(state: State<'_, AppState>) -> Result<BootstrapPayload, Strin
     let site_user = match secrets.site_token.as_deref() {
         Some(tok) if !tok.is_empty() => {
             if let Ok(m) = client.manifest(tok).await {
-                announcement = m.announcement;
+                announcement = m.announcement.filter(|s| !s.trim().is_empty());
             }
             match client.me(tok).await {
                 Ok(me) => {
@@ -106,6 +106,9 @@ async fn bootstrap(state: State<'_, AppState>) -> Result<BootstrapPayload, Strin
         }
         _ => None,
     };
+    if announcement.is_none() {
+        announcement = client.public_news().await;
+    }
     let mut mc_profile = None;
     if let Some(ref rt) = secrets.ms_refresh_token {
         if !rt.is_empty() {

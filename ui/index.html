@@ -57,7 +57,13 @@
         <section class="panel active" id="tab-home">
           <div class="hero">
             <div class="banner-notice" id="updateBar" hidden></div>
-            <div class="banner-notice" id="announcementBar" hidden></div>
+            <div class="news-card" id="announcementCard" hidden>
+              <div class="news-head">
+                <span class="news-badge">📢 DUYURU &amp; YENİLİKLER</span>
+                <span class="muted">lumcraft.com.tr</span>
+              </div>
+              <div class="news-body" id="announcementBar"></div>
+            </div>
 
             <div class="hero-banner">
               <div class="hero-top">
@@ -122,6 +128,10 @@
                   <button class="btn ghost" id="btnOpenGameDir">Oyun Klasörü</button>
                 </div>
               </div>
+            </div>
+
+            <div class="warn-notice" id="premiumWarnBar" hidden>
+              <strong>⚠ Premium Ad Koruması:</strong> Orijinal (Premium) Minecraft'ta kayıtlı bir adla Microsoft bağlamadan girersen sunucu koruması girişi engeller. Premium hesabın varsa <strong>Microsoft Bağla</strong>'yı kullan; premium hesabın yoksa sitede kimsenin almadığı (premium olmayan) bir adla hesap aç.
             </div>
 
             <div class="launch-dock">
@@ -346,7 +356,7 @@
         <img class="brand-logo" src="logo.png" alt="LumSMP" />
         <h3>lumcraft.com.tr Girişi</h3>
       </div>
-      <p class="muted">Sitede kayıtlı <strong>Minecraft kullanıcı adın</strong> ve parolanla giriş yap.</p>
+      <p class="muted">Sitede kayıtlı <strong>Minecraft kullanıcı adın</strong> ve parolanla giriş yap. <br/><span style="color:var(--gold)">Not:</span> Premium bir kullanıcı adın varsa Microsoft bağlaman gerekir; premium değilsen kimsenin almadığı bir ad kullan.</p>
       <input class="field" id="loginUser" type="text" placeholder="Minecraft kullanıcı adın (3-16 karakter)" autocomplete="username" />
       <input class="field" id="loginPass" type="password" placeholder="Parola" autocomplete="current-password" />
       <div class="alert error" id="loginErr" hidden></div>

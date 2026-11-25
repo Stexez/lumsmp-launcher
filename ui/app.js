@@ -51,11 +51,11 @@ function render() {
   $('verBadge').textContent = `v${d.version}`;
   if ($('settingsVerBadge')) $('settingsVerBadge').textContent = `v${d.version}`;
 
-  if (d.announcement) {
-    $('announcementBar').textContent = `✦ Duyuru: ${d.announcement}`;
-    $('announcementBar').hidden = false;
+  if (d.announcement && d.announcement.trim()) {
+    $('announcementBar').textContent = d.announcement.trim();
+    if ($('announcementCard')) $('announcementCard').hidden = false;
   } else {
-    $('announcementBar').hidden = true;
+    if ($('announcementCard')) $('announcementCard').hidden = true;
   }
 
   const siteName = d.siteUser?.minecraft_username || d.siteUser?.username || '';
@@ -92,6 +92,10 @@ function render() {
     $('btnMsAuth').textContent = 'Gerekmiyor';
     $('btnMsAuth').disabled = true;
     if ($('msBadge')) { $('msBadge').textContent = 'Site Modu'; $('msBadge').className = 'mini-badge muted-badge'; }
+  }
+
+  if ($('premiumWarnBar')) {
+    $('premiumWarnBar').hidden = Boolean(mcName);
   }
 
   const displayName = mcName || siteName;

@@ -118,6 +118,14 @@ impl SiteClient {
         self.call("/api/public/server-status", "GET", None, None).await
     }
 
+    pub async fn public_news(&self) -> Option<String> {
+        let val = self.call("/api/public/launcher-news", "GET", None, None).await.ok()?;
+        val.get("news")
+            .and_then(|v| v.as_str())
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+    }
+
     pub async fn cloud_get(&self, token: &str) -> Result<Value, String> {
         self.call("/api/launcher/cloud-settings", "GET", None, Some(token)).await
     }
