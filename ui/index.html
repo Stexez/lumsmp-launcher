@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LumSMP Launcher</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <!-- Custom Frameless Titlebar -->
+    <header class="titlebar" data-tauri-drag-region>
+      <div class="brand" data-tauri-drag-region>
+        <span class="brand-dot"></span>
+        <span class="brand-lum">LUM</span><span class="brand-smp">SMP</span>
+        <span class="badge-ver" id="verBadge">v2.0.0</span>
+        <span class="badge-engine">Rust · Tauri</span>
+      </div>
+      <div class="win-controls">
+        <button class="win-btn" id="btnMin" title="Küçült">—</button>
+        <button class="win-btn close" id="btnClose" title="Kapat">×</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <!-- Left Navigation Rail -->
+      <aside class="sidebar">
+        <nav class="nav">
+          <button class="nav-item active" data-tab="home"><span class="ico">✦</span> Ana Sayfa</button>
+          <button class="nav-item" data-tab="mods"><span class="ico">❖</span> Modlar</button>
+          <button class="nav-item" data-tab="media"><span class="ico">◈</span> Shader & Galeri</button>
+          <button class="nav-item" data-tab="settings"><span class="ico">⚙</span> Ayarlar</button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="account-pill" id="sideAccount">
+            <img class="avatar" id="sideAvatar" src="" alt="" hidden />
+            <div class="acc-meta">
+              <div class="acc-name" id="sideName">Giriş Yapılmadı</div>
+              <div class="acc-sub" id="sideSub">lumcraft.com.tr</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content">
+        <!-- HOME TAB -->
+        <section class="panel active" id="tab-home">
+          <div class="hero">
+            <div class="hero-top">
+              <div>
+                <div class="status-chip"><span class="pulse"></span> <span id="serverStatusText">Sunucu kontrol ediliyor…</span></div>
+                <h1 class="hero-title">LUM SMP <span class="accent">26.3</span></h1>
+                <p class="hero-sub">OneClient mimarili ultra hafif Rust launcher · Otomatik Fabric, Java 25 ve SHA-256 doğrulama.</p>
+              </div>
+              <div class="profile-pills">
+                <div class="pill-label">Performans Profili</div>
+                <div class="pill-row" id="profilePills">
+                  <button class="pill" data-profile="ultra_fps">Ultra FPS</button>
+                  <button class="pill active" data-profile="balanced">Dengeli</button>
+                  <button class="pill" data-profile="shader">Shader</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="cards-grid">
+              <div class="glass-card" id="siteCard">
+                <div class="card-kicker">LUMCRAFT HESABI</div>
+                <div class="card-val" id="siteUserVal">Bağlı değil</div>
+                <div class="card-actions">
+                  <button class="btn ghost" id="btnSiteAuth">Giriş Yap</button>
+                </div>
+              </div>
+              <div class="glass-card" id="msCard">
+                <div class="card-kicker">MİNECRAFT (MİCROSOFT)</div>
+                <div class="card-val" id="msUserVal">Bağlı değil</div>
+                <div class="card-actions">
+                  <button class="btn ghost" id="btnMsAuth">Microsoft Bağla</button>
+                </div>
+              </div>
+              <div class="glass-card">
+                <div class="card-kicker">SEÇİLİ MODLAR & RAM</div>
+                <div class="card-val" id="setupSummary">7 Mod · 4 GB RAM</div>
+                <div class="card-actions">
+                  <button class="btn ghost" id="btnOpenGameDir">Oyun Klasörü</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="launch-dock">
+              <div class="progress-wrap">
+                <div class="progress-label" id="progressLabel">Oyuna hazır.</div>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+              </div>
+              <button class="btn-play" id="btnPlay">OYNA</button>
+            </div>
+
+            <div class="alert error" id="homeError" hidden></div>
+          </div>
+        </section>
+
+        <!-- MODS TAB -->
+        <section class="panel" id="tab-mods">
+          <div class="panel-head">
+            <div>
+              <h2>İzinli İstemci Modları</h2>
+              <p class="muted">Zorunlu sunucu modları (LumPhone, VoiceChat, Fabric API) otomatik kurulur. Opsiyonel modları buradan seç.</p>
+            </div>
+            <input class="search" id="modSearch" type="text" placeholder="Mod ara…" />
+          </div>
+          <div class="cat-bar" id="modCats"></div>
+          <div class="mod-grid" id="modGrid"></div>
+        </section>
+
+        <!-- SHADERS & SCREENSHOTS TAB -->
+        <section class="panel" id="tab-media">
+          <div class="panel-head">
+            <div>
+              <h2>Shader Paketleri & Ekran Görüntüleri</h2>
+              <p class="muted">Oyun içi shader paketlerin ve F2 ekran görüntülerin.</p>
+            </div>
+            <div class="row-gap">
+              <button class="btn ghost" id="btnOpenShaders">Shader Klasörü</button>
+              <button class="btn ghost" id="btnOpenShots">Ekran Görüntüleri</button>
+            </div>
+          </div>
+          <div class="split-2">
+            <div class="glass-card tall">
+              <div class="card-kicker">YÜKLÜ SHADER PAKETLERİ</div>
+              <div class="file-list" id="shaderList"></div>
+            </div>
+            <div class="glass-card tall">
+              <div class="card-kicker">EKRAN GÖRÜNTÜLERİ (F2)</div>
+              <div class="file-list" id="shotList"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SETTINGS TAB -->
+        <section class="panel" id="tab-settings">
+          <div class="panel-head">
+            <div>
+              <h2>Launcher & Java Ayarları</h2>
+              <p class="muted">Bellek, çöp toplayıcı (GC) ve pencere davranışı.</p>
+            </div>
+          </div>
+          <div class="settings-list">
+            <div class="glass-card setting-row">
+              <div>
+                <div class="setting-title">Otomatik RAM Ayarı</div>
+                <div class="muted">Bilgisayarının belleğine göre en akıcı RAM miktarını otomatik seçer.</div>
+              </div>
+              <label class="switch"><input type="checkbox" id="setRamAuto" /><span></span></label>
+            </div>
+            <div class="glass-card setting-row" id="ramManualRow">
+              <div>
+                <div class="setting-title">RAM Miktarı: <span class="accent" id="ramLabel">4096 MB</span></div>
+                <div class="muted">2 GB – 16 GB arası ayarlanabilir.</div>
+              </div>
+              <input type="range" id="setRamRange" min="2048" max="16384" step="512" value="4096" />
+            </div>
+            <div class="glass-card setting-row">
+              <div>
+                <div class="setting-title">Java Çöp Toplayıcı (GC)</div>
+                <div class="muted">Otomatik (Önerilen), G1GC (Dengeli) veya ZGC (Düşük gecikme).</div>
+              </div>
+              <select class="select" id="setPerfMode">
+                <option value="auto">Otomatik</option>
+                <option value="g1">G1GC (Dengeli)</option>
+                <option value="zgc">ZGC (Yüksek RAM)</option>
+              </select>
+            </div>
+            <div class="glass-card setting-row">
+              <div>
+                <div class="setting-title">Oyun Açılınca Küçült</div>
+                <div class="muted">Minecraft başlayınca launcher arka plana alınır, kapanınca geri gelir.</div>
+              </div>
+              <label class="switch"><input type="checkbox" id="setMinLaunch" /><span></span></label>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Site Login Modal -->
+  <div class="modal-backdrop" id="loginModal" hidden>
+    <div class="modal">
+      <h3>lumcraft.com.tr Girişi</h3>
+      <p class="muted">LumSMP hesabınla giriş yap.</p>
+      <input class="field" id="loginUser" type="text" placeholder="Kullanıcı adı veya e-posta" />
+      <input class="field" id="loginPass" type="password" placeholder="Şifre" />
+      <div class="alert error" id="loginErr" hidden></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="btnLoginCancel">İptal</button>
+        <button class="btn primary" id="btnLoginSubmit">Giriş Yap</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
