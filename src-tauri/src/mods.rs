@@ -97,7 +97,7 @@ pub fn read_screenshot_data_url(root: &Path, name: &str) -> Result<String, Strin
 }
 
 pub fn delete_media_file(root: &Path, sub: &str, name: &str) -> Result<(), String> {
-    if !matches!(sub, "shaderpacks" | "screenshots") {
+    if !matches!(sub, "shaderpacks" | "screenshots" | "resourcepacks") {
         return Err("İzin verilmeyen klasör.".into());
     }
     let target = safe_join(root, &format!("{sub}/{name}"))?;
@@ -105,6 +105,86 @@ pub fn delete_media_file(root: &Path, sub: &str, name: &str) -> Result<(), Strin
         fs::remove_file(&target).map_err(|e| format!("Silinemedi: {e}"))?;
     }
     Ok(())
+}
+
+pub fn resourcepack_catalog() -> Vec<ShaderItem> {
+    let s = |slug: &str, name: &str, desc: &str, tier: &str| ShaderItem {
+        slug: slug.into(),
+        name: name.into(),
+        desc: desc.into(),
+        tier: tier.into(),
+    };
+    vec![
+        s("faithful-32x", "Faithful 32x", "Klasik Minecraft dokularının 2 kat daha keskin HD hali.", "HD 32x"),
+        s("fresh-animations", "Fresh Animations", "Yaratıklara akıcı yüz ifadeleri ve yürüyüş animasyonları.", "Animasyon"),
+        s("bare-bones", "Bare Bones", "Minecraft fragmanlarındaki sade ve yüksek FPS'li görünüm.", "FPS"),
+        s("default-dark-mode", "Default Dark Mode", "Envanter ve tüm oyun menülerini koyu temaya çevirir.", "Arayüz"),
+        s("visual-ores", "Glowing / Visual Ores", "Madenleri karanlıkta kolayca fark etmeni sağlar.", "Survival"),
+        s("low-on-fire", "Low On Fire", "Yanarken ekranı kaplayan alev yüksekliğini azaltır.", "PvP"),
+    ]
+}
+
+pub async fn install_resourcepack(root: &Path, cfg: &AppConfig, slug: &str) -> Result<String, String> {
+    let http = Client::builder()
+        .timeout(Duration::from_secs(45))
+        .user_agent("LumSMP-Launcher/2.3")
+        .build()
+        .map_err(|e| format!("HTTP hatası: {e}"))?;
+    let url = format!("https://api.modrinth.com/v2/project/{slug}/version");
+    let resp = http.get(&url).send().await.map_err(|e| format!("Modrinth bağlantısı başarısız: {e}"))?;
+    if !resp.status().is_success() {
+        return Err("Kaynak paketi Modrinth'te bulunamadı.".into());
+    }
+    let arr: Vec<Value> = resp.json().await.map_err(|_| "Paket listesi okunamadı.".to_string())?;
+    let ver = arr.first().ok_or("Bu paket için uygun sürüm yok.")?;
+    let files = ver.get("files").and_then(|v| v.as_array()).ok_or("Paket dosyası bulunamadı.")?;
+    let primary = files.iter().find(|f| f.get("primary").and_then(|b| b.as_bool()) == Some(true)).or_else(|| files.first()).ok_or("Dosya yok.")?;
+    let fname = primary.get("filename").and_then(|v| v.as_str()).ok_or("Dosya adı yok.")?;
+    let furl = primary.get("url").and_then(|v| v.as_str()).ok_or("İndirme linki yok.")?;
+    let size = primary.get("size").and_then(|v| v.as_u64());
+    let dir = safe_join(root, "resourcepacks")?;
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let target = safe_join(&dir, fname)?;
+    download_file(&http, cfg, furl, &target, None, None, size, None).await?;
+    Ok(fname.to_string())
+}
+
+fn copy_dir_recursive(src: &Path, dst: &Path, count: &mut usize) -> Result<(), String> {
+    if !src.exists() { return Ok(()); }
+    fs::create_dir_all(dst).map_err(|e| e.to_string())?;
+    for entry in fs::read_dir(src).map_err(|e| e.to_string())?.flatten() {
+        let p = entry.path();
+        let target = dst.join(entry.file_name());
+        if p.is_dir() {
+            copy_dir_recursive(&p, &target, count)?;
+        } else if p.is_file() {
+            fs::copy(&p, &target).map_err(|e| e.to_string())?;
+            *count += 1;
+        }
+    }
+    Ok(())
+}
+
+pub fn backup_user_data(root: &Path) -> Result<(String, usize), String> {
+    let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S").to_string();
+    let folder_name = format!("yedek-{stamp}");
+    let dest = safe_join(root, &format!("lumsmp-backups/{folder_name}"))?;
+    fs::create_dir_all(&dest).map_err(|e| format!("Yedek klasörü oluşturulamadı: {e}"))?;
+    let mut count = 0usize;
+    for rel in ["options.txt", "config/lumsmp-hud.properties"] {
+        let src = safe_join(root, rel)?;
+        if src.is_file() {
+            let dst = dest.join(rel.replace('/', "_"));
+            if fs::copy(&src, &dst).is_ok() { count += 1; }
+        }
+    }
+    for dir_rel in ["xaero", "XaeroWaypoints", "XaeroWorldMap"] {
+        let src = safe_join(root, dir_rel)?;
+        if src.is_dir() {
+            let _ = copy_dir_recursive(&src, &dest.join(dir_rel), &mut count);
+        }
+    }
+    Ok((folder_name, count))
 }
 
 pub fn read_game_log_tail(root: &Path) -> String {

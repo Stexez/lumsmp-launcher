@@ -9,6 +9,7 @@
 		"GuiMixin",
 		"HudMixin",
 		"KeyboardHandlerMixin",
+		"MouseHandlerMixin",
 		"LevelLoadingScreenMixin",
 		"LoadingOverlayMixin",
 		"ScreenMixin"

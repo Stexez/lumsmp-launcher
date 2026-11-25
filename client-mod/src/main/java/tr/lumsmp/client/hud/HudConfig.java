@@ -9,13 +9,13 @@ import net.minecraft.client.Minecraft;
 import tr.lumsmp.client.LumsmpClient;
 
 /**
- * OneClient tarzı oyun içi HUD ve istemci ayarları.
- * Ayarlar <oyun>/config/lumsmp-hud.properties dosyasında saklanır.
+ * LumSMP oyun içi HUD, Spotify ve sürükle-bırak konum ayarları.
  */
 public final class HudConfig {
 	public static boolean enabled = true;
 	public static boolean showFps = true;
 	public static boolean showPing = true;
+	public static boolean showCps = true;
 	public static boolean showCoords = true;
 	public static boolean showDirection = true;
 	public static boolean showClock = true;
@@ -24,6 +24,11 @@ public final class HudConfig {
 	public static boolean fullbright = false;
 	/** 0 = Sol Üst, 1 = Sağ Üst, 2 = Sol Alt, 3 = Sağ Alt */
 	public static int corner = 0;
+	/** -1 = köşe konumu kullanılır; >= 0 ise sürükle-bırak özel koordinat */
+	public static int hudX = -1;
+	public static int hudY = -1;
+	public static int spotifyX = -1;
+	public static int spotifyY = -1;
 
 	private static boolean loaded;
 	private static double savedGamma = 1.0;
@@ -32,8 +37,7 @@ public final class HudConfig {
 
 	private static Path filePath() {
 		Minecraft mc = Minecraft.getInstance();
-		Path dir = mc.gameDirectory.toPath().resolve("config");
-		return dir.resolve("lumsmp-hud.properties");
+		return mc.gameDirectory.toPath().resolve("config").resolve("lumsmp-hud.properties");
 	}
 
 	public static void load() {
@@ -47,6 +51,7 @@ public final class HudConfig {
 			enabled = Boolean.parseBoolean(props.getProperty("enabled", "true"));
 			showFps = Boolean.parseBoolean(props.getProperty("showFps", "true"));
 			showPing = Boolean.parseBoolean(props.getProperty("showPing", "true"));
+			showCps = Boolean.parseBoolean(props.getProperty("showCps", "true"));
 			showCoords = Boolean.parseBoolean(props.getProperty("showCoords", "true"));
 			showDirection = Boolean.parseBoolean(props.getProperty("showDirection", "true"));
 			showClock = Boolean.parseBoolean(props.getProperty("showClock", "true"));
@@ -54,6 +59,10 @@ public final class HudConfig {
 			showSpotify = Boolean.parseBoolean(props.getProperty("showSpotify", "true"));
 			fullbright = Boolean.parseBoolean(props.getProperty("fullbright", "false"));
 			corner = Math.max(0, Math.min(3, Integer.parseInt(props.getProperty("corner", "0"))));
+			hudX = Integer.parseInt(props.getProperty("hudX", "-1"));
+			hudY = Integer.parseInt(props.getProperty("hudY", "-1"));
+			spotifyX = Integer.parseInt(props.getProperty("spotifyX", "-1"));
+			spotifyY = Integer.parseInt(props.getProperty("spotifyY", "-1"));
 		} catch (Exception e) {
 			LumsmpClient.LOG.warn("HUD ayarları okunamadı: {}", e.getMessage());
 		}
@@ -65,6 +74,7 @@ public final class HudConfig {
 		props.setProperty("enabled", String.valueOf(enabled));
 		props.setProperty("showFps", String.valueOf(showFps));
 		props.setProperty("showPing", String.valueOf(showPing));
+		props.setProperty("showCps", String.valueOf(showCps));
 		props.setProperty("showCoords", String.valueOf(showCoords));
 		props.setProperty("showDirection", String.valueOf(showDirection));
 		props.setProperty("showClock", String.valueOf(showClock));
@@ -72,6 +82,10 @@ public final class HudConfig {
 		props.setProperty("showSpotify", String.valueOf(showSpotify));
 		props.setProperty("fullbright", String.valueOf(fullbright));
 		props.setProperty("corner", String.valueOf(corner));
+		props.setProperty("hudX", String.valueOf(hudX));
+		props.setProperty("hudY", String.valueOf(hudY));
+		props.setProperty("spotifyX", String.valueOf(spotifyX));
+		props.setProperty("spotifyY", String.valueOf(spotifyY));
 		try {
 			Files.createDirectories(path.getParent());
 			try (OutputStream out = Files.newOutputStream(path)) {
@@ -82,10 +96,19 @@ public final class HudConfig {
 		}
 	}
 
+	public static void resetPositions() {
+		hudX = -1;
+		hudY = -1;
+		spotifyX = -1;
+		spotifyY = -1;
+		save();
+	}
+
 	public static void reset() {
 		enabled = true;
 		showFps = true;
 		showPing = true;
+		showCps = true;
 		showCoords = true;
 		showDirection = true;
 		showClock = true;
@@ -93,6 +116,10 @@ public final class HudConfig {
 		showSpotify = true;
 		fullbright = false;
 		corner = 0;
+		hudX = -1;
+		hudY = -1;
+		spotifyX = -1;
+		spotifyY = -1;
 		applyFullbright();
 		save();
 	}
@@ -115,7 +142,6 @@ public final class HudConfig {
 				mc.options.gamma().set(savedGamma);
 			}
 		} catch (Exception ignored) {
-			// Bazı sürümlerde gamma 0..1 ile sınırlıysa en yüksek değeri uygula
 			try {
 				mc.options.gamma().set(fullbright ? 1.0 : savedGamma);
 			} catch (Exception ignored2) {}
@@ -123,6 +149,7 @@ public final class HudConfig {
 	}
 
 	public static String cornerLabel() {
+		if (hudX >= 0 || hudY >= 0) return "Özel";
 		return switch (corner) {
 			case 1 -> "Sağ Üst";
 			case 2 -> "Sol Alt";

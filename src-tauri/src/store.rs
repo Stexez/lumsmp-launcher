@@ -3,12 +3,21 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use sysinfo::System;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SavedAccount {
+    pub username: String,
+    pub token: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Secrets {
     pub site_token: Option<String>,
     #[serde(default)]
     pub site_user: Option<String>,
+    #[serde(default)]
+    pub saved_accounts: Vec<SavedAccount>,
     pub ms_refresh_token: Option<String>,
 }
 

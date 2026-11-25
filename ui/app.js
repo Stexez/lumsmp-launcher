@@ -6,6 +6,8 @@ const state = {
   data: null,
   catalog: [],
   shaderCatalog: [],
+  packCatalog: [],
+  suspectMod: null,
   modCat: 'all',
   modQuery: '',
 };
@@ -224,39 +226,83 @@ async function refreshInstalledShaders() {
   });
 }
 
-async function refreshGallery() {
-  const shots = await invoke('list_screenshots');
-  const grid = $('shotGrid');
-  if (!shots.length) {
-    grid.innerHTML = '<div class="muted">Henüz ekran görüntüsü yok (oyunda F2 ile çek).</div>';
-    return;
-  }
-  grid.innerHTML = shots.slice(0, 18).map((f) => `
-    <div class="shot-card">
-      <img class="shot-thumb" data-shot-img="${f.name}" alt="${f.name}" />
-      <div class="shot-foot">
-        <span>${f.name.slice(0, 18)}</span>
-        <button class="btn ghost" data-del-shot="${f.name}">Sil</button>
+async function renderPacks() {
+  $('packStore').innerHTML = state.packCatalog.map((s) => `
+    <div class="mod-card">
+      <div>
+        <div class="mod-title">${s.name} <span class="mini-badge">${s.tier}</span></div>
+        <div class="mod-desc">${s.desc}</div>
       </div>
+      <button class="btn primary" data-install-pack="${s.slug}">İndir</button>
     </div>
   `).join('');
 
-  for (const f of shots.slice(0, 18)) {
-    const img = grid.querySelector(`[data-shot-img="${CSS.escape(f.name)}"]`);
-    if (!img) continue;
-    invoke('read_screenshot_data', { name: f.name }).then((src) => {
-      img.src = src;
-      img.onclick = () => {
-        $('shotModalTitle').textContent = f.name;
-        $('shotModalImg').src = src;
-        $('shotModal').hidden = false;
-      };
-    }).catch(() => {});
-  }
-  grid.querySelectorAll('[data-del-shot]').forEach((b) => {
+  $('packStore').querySelectorAll('[data-install-pack]').forEach((btn) => {
+    btn.onclick = async () => {
+      const slug = btn.dataset.installPack;
+      btn.disabled = true;
+      btn.textContent = 'İniyor…';
+      const notice = $('packNotice');
+      try {
+        const fname = await invoke('install_resourcepack', { slug });
+        notice.textContent = `✓ ${fname} indirildi! Oyunda Kaynak Paketleri menüsünden aktif edebilirsin.`;
+        notice.hidden = false;
+        await refreshInstalledPacks();
+      } catch (err) {
+        notice.textContent = `Hata: ${err}`;
+        notice.hidden = false;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'İndir';
+      }
+    };
+  });
+  await refreshInstalledPacks();
+}
+
+async function refreshInstalledPacks() {
+  const list = await invoke('list_resourcepacks');
+  $('packList').innerHTML = list.length
+    ? list.map((f) => `<div class="file-row"><span>${f.name} (${f.sizeKb} KB)</span><button class="btn ghost" data-del-pack="${f.name}">Sil</button></div>`).join('')
+    : '<div class="muted">Henüz yüklü kaynak paketi yok. Yukarıdan tek tıkla indirebilirsin.</div>';
+  $('packList').querySelectorAll('[data-del-pack]').forEach((b) => {
     b.onclick = async () => {
-      await invoke('delete_media', { sub: 'screenshots', name: b.dataset.delShot });
-      await refreshGallery();
+      await invoke('delete_media', { sub: 'resourcepacks', name: b.dataset.delPack });
+      await refreshInstalledPacks();
+    };
+  });
+}
+
+function renderAccountsModal() {
+  const active = state.data?.siteUser?.minecraft_username || state.data?.siteUser?.username || '';
+  const list = state.data?.savedAccounts || [];
+  $('accountsList').innerHTML = list.length
+    ? list.map((u) => {
+        const isAct = active && u.toLowerCase() === active.toLowerCase();
+        return `<div class="file-row">
+          <span><strong>${u}</strong> ${isAct ? '<span class="mini-badge green-badge">Aktif</span>' : ''}</span>
+          <div class="row-gap">
+            ${isAct ? '' : `<button class="btn primary" data-switch-acc="${u}">Geç</button>`}
+            <button class="btn ghost" data-rem-acc="${u}">Sil</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="muted">Kayıtlı hesap yok. Aşağıdan yeni hesap ekleyebilirsin.</div>';
+
+  $('accountsList').querySelectorAll('[data-switch-acc]').forEach((b) => {
+    b.onclick = async () => {
+      await invoke('switch_account', { username: b.dataset.switchAcc });
+      $('accountsModal').hidden = true;
+      state.data = await invoke('bootstrap');
+      render();
+    };
+  });
+  $('accountsList').querySelectorAll('[data-rem-acc]').forEach((b) => {
+    b.onclick = async () => {
+      await invoke('remove_saved_account', { username: b.dataset.remAcc });
+      state.data = await invoke('bootstrap');
+      render();
+      renderAccountsModal();
     };
   });
 }
@@ -301,7 +347,7 @@ async function init() {
       btn.classList.add('active');
       $(`tab-${btn.dataset.tab}`).classList.add('active');
       if (btn.dataset.tab === 'shaders') renderShaders();
-      else if (btn.dataset.tab === 'gallery') refreshGallery();
+      else if (btn.dataset.tab === 'packs') renderPacks();
       else if (btn.dataset.tab === 'logs') refreshLogs();
     };
   });
@@ -332,12 +378,52 @@ async function init() {
   $('btnOpenGameDir').onclick = () => invoke('open_folder', { sub: '' });
   if ($('btnSetOpenGame')) $('btnSetOpenGame').onclick = () => invoke('open_folder', { sub: '' });
   if ($('btnSetOpenMods')) $('btnSetOpenMods').onclick = () => invoke('open_folder', { sub: 'mods' });
+  if ($('btnSetOpenBackups')) $('btnSetOpenBackups').onclick = () => invoke('open_folder', { sub: 'lumsmp-backups' });
   $('btnOpenShaders').onclick = () => invoke('open_folder', { sub: 'shaderpacks' });
-  $('btnOpenShots').onclick = () => invoke('open_folder', { sub: 'screenshots' });
-  const closeShot = () => { $('shotModal').hidden = true; $('shotModalImg').src = ''; };
-  $('btnShotClose').onclick = closeShot;
-  $('shotModal').addEventListener('click', (e) => { if (e.target === $('shotModal')) closeShot(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeShot(); $('loginModal').hidden = true; } });
+  $('btnOpenPacks').onclick = () => invoke('open_folder', { sub: 'resourcepacks' });
+
+  const openAccounts = () => { renderAccountsModal(); $('accountsModal').hidden = false; };
+  $('btnAccounts').onclick = openAccounts;
+  $('btnSwitchAccount').onclick = openAccounts;
+  $('btnAccountsClose').onclick = () => { $('accountsModal').hidden = true; };
+  $('accountsModal').addEventListener('click', (e) => { if (e.target === $('accountsModal')) $('accountsModal').hidden = true; });
+  $('btnAddAccount').onclick = () => {
+    $('accountsModal').hidden = true;
+    $('loginErr').hidden = true;
+    $('loginModal').hidden = false;
+    $('loginUser').focus();
+  };
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { $('accountsModal').hidden = true; $('loginModal').hidden = true; }
+  });
+
+  if ($('btnBackupProfile')) {
+    $('btnBackupProfile').onclick = async () => {
+      const btn = $('btnBackupProfile');
+      btn.disabled = true;
+      btn.textContent = 'Yedekleniyor…';
+      try {
+        const res = await invoke('backup_profile');
+        $('updateStatusText').textContent = `✓ Yedek alındı: ${res.folder} (${res.count} dosya).`;
+      } catch (e) {
+        $('updateStatusText').textContent = `Yedekleme hatası: ${e}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Yedek Al (Ayar + Harita)';
+      }
+    };
+  }
+
+  $('btnCrashRecover').onclick = async () => {
+    if (!state.suspectMod || !state.data?.settings) return;
+    const modToDisable = state.suspectMod;
+    state.suspectMod = null;
+    $('crashRecoveryBar').hidden = true;
+    showError('');
+    const nextMods = (state.data.settings.mods || []).filter((m) => m !== modToDisable);
+    await updateSettings({ mods: nextMods });
+    $('btnPlay').click();
+  };
   $('btnRefreshLogs').onclick = refreshLogs;
   $('btnCopyLogs').onclick = async () => {
     await navigator.clipboard.writeText($('logBox').textContent);
@@ -427,6 +513,14 @@ async function init() {
     $('progressFill').style.width = '0%';
     $('progressLabel').textContent = payload.code === 0 ? 'Oyun kapatıldı.' : `Oyun hata ile kapandı (kod ${payload.code}).`;
     if (payload.crashHint) showError(payload.crashHint);
+    if (payload.suspectMod) {
+      state.suspectMod = payload.suspectMod;
+      $('crashRecoveryText').textContent = `Şüpheli mod: ${payload.suspectMod}`;
+      $('crashRecoveryBar').hidden = false;
+    } else {
+      state.suspectMod = null;
+      $('crashRecoveryBar').hidden = true;
+    }
     render();
   });
 
@@ -462,6 +556,7 @@ async function init() {
 
   state.catalog = await invoke('get_catalog');
   state.shaderCatalog = await invoke('get_shader_catalog');
+  state.packCatalog = await invoke('get_resourcepack_catalog');
   state.data = await invoke('bootstrap');
   render();
   refreshStatus();

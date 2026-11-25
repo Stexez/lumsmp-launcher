@@ -28,27 +28,27 @@
             <button class="nav-item active" data-tab="home"><span class="ico">✦</span> Ana Sayfa</button>
             <button class="nav-item" data-tab="mods"><span class="ico">❖</span> Modlar</button>
             <button class="nav-item" data-tab="shaders"><span class="ico">☀</span> Shaderlar</button>
+            <button class="nav-item" data-tab="packs"><span class="ico">◈</span> Kaynak Paketleri</button>
           </nav>
 
           <div class="nav-label">ARAÇLAR</div>
           <nav class="nav">
-            <button class="nav-item" data-tab="gallery"><span class="ico">◈</span> Galeri (F2)</button>
             <button class="nav-item" data-tab="logs"><span class="ico">▤</span> Oyun Logu</button>
             <button class="nav-item" data-tab="settings"><span class="ico">⚙</span> Ayarlar</button>
           </nav>
         </div>
 
         <div class="sidebar-footer">
-          <div class="account-pill">
+          <button class="account-pill clickable" id="btnAccounts" type="button" title="Hesap değiştir veya yeni hesap ekle">
             <div class="avatar-wrap">
               <img class="avatar" id="sideAvatar" src="" alt="" hidden />
               <div class="avatar-fallback" id="sideAvatarFallback">L</div>
             </div>
             <div class="acc-meta">
               <div class="acc-name" id="sideName">Giriş Yapılmadı</div>
-              <div class="acc-sub" id="sideSub">lumcraft.com.tr</div>
+              <div class="acc-sub" id="sideSub">Hesap değiştir ⇄</div>
             </div>
-          </div>
+          </button>
         </div>
       </aside>
 
@@ -87,6 +87,7 @@
                 <div class="card-sub" id="siteStatsVal">Oyuna girmek için lumcraft.com.tr hesabınla giriş yap</div>
                 <div class="card-actions">
                   <button class="btn primary" id="btnSiteAuth">Giriş Yap</button>
+                  <button class="btn ghost" id="btnSwitchAccount" title="Kayıtlı hesaplar">⇄</button>
                 </div>
               </div>
 
@@ -127,6 +128,10 @@
             </div>
 
             <div class="alert error" id="homeError" hidden></div>
+            <div class="recovery-bar" id="crashRecoveryBar" hidden>
+              <span id="crashRecoveryText"></span>
+              <button class="btn primary" id="btnCrashRecover">Sorunlu Modu Kapat ve Tekrar Dene</button>
+            </div>
           </div>
         </section>
 
@@ -167,16 +172,21 @@
           </div>
         </section>
 
-        <!-- GALLERY -->
-        <section class="panel" id="tab-gallery">
+        <!-- RESOURCE PACKS -->
+        <section class="panel" id="tab-packs">
           <div class="panel-head">
             <div>
-              <h2>Ekran Görüntüsü Galerisi (F2)</h2>
-              <p class="muted">Oyunda F2 ile çektiğin ekran görüntüleri.</p>
+              <h2>Kaynak Paketleri (Modrinth)</h2>
+              <p class="muted">Tek tıkla indir, oyunda Kaynak Paketleri menüsünden etkinleştir.</p>
             </div>
-            <button class="btn ghost" id="btnOpenShots">Klasörü Aç</button>
+            <button class="btn ghost" id="btnOpenPacks">Paket Klasörü</button>
           </div>
-          <div class="shot-grid" id="shotGrid"></div>
+          <div class="alert ok" id="packNotice" hidden></div>
+          <div class="mod-grid" id="packStore"></div>
+          <div class="glass-card" style="margin-top:auto">
+            <div class="card-kicker">YÜKLÜ KAYNAK PAKETLERİ</div>
+            <div class="file-list compact" id="packList"></div>
+          </div>
         </section>
 
         <!-- LOGS -->
@@ -303,11 +313,15 @@
                   <div class="set-card-title">Otomatik Güncelleme & Klasörler</div>
                 </div>
               </div>
-              <p class="muted" id="updateStatusText" style="margin-bottom:12px;">Launcher açılışta yeni sürümleri otomatik kontrol eder.</p>
-              <div class="row-gap" style="flex-wrap:wrap;">
+              <p class="muted" id="updateStatusText" style="margin-bottom:10px;">Launcher açılışta yeni sürümleri otomatik kontrol eder.</p>
+              <div class="row-gap" style="flex-wrap:wrap; margin-bottom:10px;">
                 <button class="btn primary" id="btnCheckUpdate">Güncelleme Kontrol Et</button>
+                <button class="btn ghost" id="btnBackupProfile">Yedek Al (Ayar + Harita)</button>
+              </div>
+              <div class="row-gap" style="flex-wrap:wrap;">
                 <button class="btn ghost" id="btnSetOpenGame">Oyun Klasörü</button>
                 <button class="btn ghost" id="btnSetOpenMods">Modlar</button>
+                <button class="btn ghost" id="btnSetOpenBackups">Yedekler</button>
               </div>
             </div>
           </div>
@@ -334,14 +348,19 @@
     </div>
   </div>
 
-  <!-- Screenshot Lightbox -->
-  <div class="modal-backdrop" id="shotModal" hidden>
-    <div class="modal wide">
-      <div class="panel-head">
-        <h3 id="shotModalTitle">Ekran Görüntüsü</h3>
-        <button class="btn ghost" id="btnShotClose">Kapat</button>
+  <!-- Account Switcher Modal -->
+  <div class="modal-backdrop" id="accountsModal" hidden>
+    <div class="modal">
+      <div class="modal-brand">
+        <img class="brand-logo" src="logo.png" alt="LumSMP" />
+        <h3>Kayıtlı Hesaplar</h3>
       </div>
-      <img id="shotModalImg" class="lightbox-img" src="" alt="" />
+      <p class="muted">Tek tıkla hesap değiştir veya yeni LumSMP hesabı ekle.</p>
+      <div class="file-list compact" id="accountsList"></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="btnAccountsClose" type="button">Kapat</button>
+        <button class="btn primary" id="btnAddAccount" type="button">+ Hesap Ekle</button>
+      </div>
     </div>
   </div>
 

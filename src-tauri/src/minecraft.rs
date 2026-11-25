@@ -486,16 +486,39 @@ pub fn spawn_game(
         .map_err(|e| format!("Minecraft başlatılamadı: {e}"))
 }
 
-pub fn analyze_crash(root: &Path) -> Option<String> {
+pub struct CrashAnalysis {
+    pub hint: String,
+    pub suspect_mod: Option<String>,
+}
+
+pub fn analyze_crash(root: &Path, enabled_slugs: &[String]) -> Option<CrashAnalysis> {
     let text = fs::read_to_string(root.join("logs").join("launcher-game.log")).ok()?;
+    let lower = text.to_lowercase();
+    let suspect = enabled_slugs.iter().find(|slug| {
+        let s = slug.to_lowercase();
+        let compact = s.replace('-', "");
+        (lower.contains(&s) || lower.contains(&compact))
+            && (lower.contains("mixin") || lower.contains("exception") || lower.contains("incompatible") || lower.contains("crash"))
+    }).cloned();
+
     if text.contains("OutOfMemoryError") {
-        return Some("Oyun yetersiz RAM nedeniyle kapandı. Ayarlardan RAM miktarını artırabilirsin.".into());
+        return Some(CrashAnalysis {
+            hint: "Oyun yetersiz RAM nedeniyle kapandı. Ayarlardan RAM miktarını artırabilirsin.".into(),
+            suspect_mod: None,
+        });
     }
-    if text.contains("Incompatible mod set") || text.contains("ModResolutionException") {
-        return Some("Mod uyumsuzluğu tespit edildi. Modlar sekmesinden son eklediğin modu kapatıp tekrar dene.".into());
+    if text.contains("Incompatible mod set") || text.contains("ModResolutionException") || suspect.is_some() {
+        let hint = match &suspect {
+            Some(m) => format!("Mod hatası tespit edildi ('{m}'). Tek tıkla bu modu kapatıp tekrar deneyebilirsin."),
+            None => "Mod uyumsuzluğu tespit edildi. Modlar sekmesinden son eklediğin modu kapatıp tekrar dene.".into(),
+        };
+        return Some(CrashAnalysis { hint, suspect_mod: suspect });
     }
     if text.contains("GLFW error") || text.contains("OpenGL") {
-        return Some("Ekran kartı sürücüsü (OpenGL) hatası. Ekran kartı sürücünü güncellemeyi dene.".into());
+        return Some(CrashAnalysis {
+            hint: "Ekran kartı sürücüsü (OpenGL) hatası. Ekran kartı sürücünü güncellemeyi dene.".into(),
+            suspect_mod: None,
+        });
     }
     None
 }

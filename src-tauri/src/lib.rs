@@ -32,6 +32,7 @@ struct BootstrapPayload {
     site_origin: String,
     ms_configured: bool,
     site_user: Option<Value>,
+    saved_accounts: Vec<String>,
     mc_profile: Option<Value>,
     announcement: Option<String>,
     settings: Settings,
@@ -123,11 +124,17 @@ async fn bootstrap(state: State<'_, AppState>) -> Result<BootstrapPayload, Strin
         if playing { "LumSMP Oynuyor" } else { "LumSMP Launcher" },
         if playing { "lumcraft.com.tr" } else { "Oyuna hazırlanıyor" },
     );
+    let saved_accounts: Vec<String> = read_secrets()
+        .saved_accounts
+        .into_iter()
+        .map(|a| a.username)
+        .collect();
     Ok(BootstrapPayload {
         version: env!("CARGO_PKG_VERSION").into(),
         site_origin: state.cfg.site_origin.clone(),
         ms_configured: state.cfg.ms_configured(),
         site_user,
+        saved_accounts,
         mc_profile,
         announcement,
         max_ram_mb: store::max_ram_mb(),
@@ -156,9 +163,45 @@ async fn site_login(state: State<'_, AppState>, username: String, password: Stri
         .to_string();
     let mut sec = read_secrets();
     sec.site_token = Some(token.to_string());
-    sec.site_user = Some(account_name);
+    sec.site_user = Some(account_name.clone());
+    sec.saved_accounts.retain(|a| !a.username.eq_ignore_ascii_case(&account_name));
+    sec.saved_accounts.insert(0, store::SavedAccount {
+        username: account_name,
+        token: token.to_string(),
+    });
+    sec.saved_accounts.truncate(8);
     write_secrets(&sec)?;
     Ok(res)
+}
+
+#[tauri::command]
+fn switch_account(username: String) -> Result<(), String> {
+    let mut sec = read_secrets();
+    let acc = sec
+        .saved_accounts
+        .iter()
+        .find(|a| a.username.eq_ignore_ascii_case(&username))
+        .cloned()
+        .ok_or("Kayıtlı hesap bulunamadı.")?;
+    sec.site_token = Some(acc.token);
+    sec.site_user = Some(acc.username);
+    write_secrets(&sec)
+}
+
+#[tauri::command]
+fn remove_saved_account(username: String) -> Result<(), String> {
+    let mut sec = read_secrets();
+    sec.saved_accounts.retain(|a| !a.username.eq_ignore_ascii_case(&username));
+    if sec.site_user.as_deref().map(|u| u.eq_ignore_ascii_case(&username)).unwrap_or(false) {
+        if let Some(first) = sec.saved_accounts.first().cloned() {
+            sec.site_token = Some(first.token);
+            sec.site_user = Some(first.username);
+        } else {
+            sec.site_token = None;
+            sec.site_user = None;
+        }
+    }
+    write_secrets(&sec)
 }
 
 #[tauri::command]
@@ -247,6 +290,27 @@ async fn save_settings(state: State<'_, AppState>, next: Settings) -> Result<Set
 #[tauri::command]
 fn list_screenshots() -> Vec<mods::MediaEntry> {
     mods::list_folder_files(&store::game_dir(), "screenshots", &[".png", ".jpg", ".jpeg"])
+}
+
+#[tauri::command]
+fn get_resourcepack_catalog() -> Vec<mods::ShaderItem> {
+    mods::resourcepack_catalog()
+}
+
+#[tauri::command]
+async fn install_resourcepack(state: State<'_, AppState>, slug: String) -> Result<String, String> {
+    mods::install_resourcepack(&store::game_dir(), &state.cfg, &slug).await
+}
+
+#[tauri::command]
+fn list_resourcepacks() -> Vec<mods::MediaEntry> {
+    mods::list_folder_files(&store::game_dir(), "resourcepacks", &[".zip"])
+}
+
+#[tauri::command]
+fn backup_profile() -> Result<Value, String> {
+    let (folder, count) = mods::backup_user_data(&store::game_dir())?;
+    Ok(json!({ "folder": folder, "count": count }))
 }
 
 #[tauri::command]
@@ -387,10 +451,11 @@ async fn launch_game(app: AppHandle, state: State<'_, AppState>) -> Result<Value
                 }
             }
         });
+        let enabled_slugs = settings.mods.clone();
         std::thread::spawn(move || {
             let code = child.wait().ok().and_then(|s| s.code()).unwrap_or(-1);
             running_flag.store(false, std::sync::atomic::Ordering::Relaxed);
-            let crash_hint = if code != 0 { minecraft::analyze_crash(&root_exit) } else { None };
+            let crash = if code != 0 { minecraft::analyze_crash(&root_exit, &enabled_slugs) } else { None };
             if let Some(st) = app_exit.try_state::<AppState>() {
                 *st.playing.lock().unwrap() = false;
                 st.rpc.set_status(rpc_enabled, "LumSMP Launcher", "Oyuna hazırlanıyor");
@@ -399,7 +464,14 @@ async fn launch_game(app: AppHandle, state: State<'_, AppState>) -> Result<Value
                 let _ = w.unminimize();
                 let _ = w.set_focus();
             }
-            let _ = app_exit.emit("game-exit", json!({ "code": code, "crashHint": crash_hint }));
+            let _ = app_exit.emit(
+                "game-exit",
+                json!({
+                    "code": code,
+                    "crashHint": crash.as_ref().map(|c| c.hint.clone()),
+                    "suspectMod": crash.and_then(|c| c.suspect_mod)
+                }),
+            );
         });
 
         Ok(json!({ "started": true, "server": format!("{}:{}", manifest.server.host, manifest.server.port) }))
@@ -439,12 +511,18 @@ pub fn run() {
             check_for_updates,
             site_login,
             site_logout,
+            switch_account,
+            remove_saved_account,
             ms_login,
             ms_logout,
             get_server_status,
             get_catalog,
             get_shader_catalog,
             install_shader,
+            get_resourcepack_catalog,
+            install_resourcepack,
+            list_resourcepacks,
+            backup_profile,
             read_screenshot_data,
             delete_media,
             read_game_log,
