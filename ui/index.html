@@ -61,18 +61,23 @@
 
             <div class="hero-banner">
               <div class="hero-top">
-                <div>
+                <div class="hero-copy">
                   <div class="status-chip"><span class="pulse"></span> <span id="serverStatusText">Sunucu kontrol ediliyor…</span></div>
                   <h1 class="hero-title"><span class="gold-text">LUM</span> SMP <span class="ver-pill">26.3</span></h1>
-                  <p class="hero-sub">Resmî LumSMP istemcisi — otomatik Fabric & Java 25, korumalı giriş, oyun içi <strong>Sağ Shift</strong> HUD ve Spotify kontrolü.</p>
-                </div>
-                <div class="profile-pills">
-                  <div class="pill-label">Performans Profili</div>
-                  <div class="pill-row" id="profilePills">
-                    <button class="pill" data-profile="ultra_fps">⚡ Ultra FPS</button>
-                    <button class="pill active" data-profile="balanced">✦ Dengeli</button>
-                    <button class="pill" data-profile="shader">☀ Shader</button>
+                  <p class="hero-sub">Resmî LumSMP istemcisi — <strong>Sağ Shift</strong> HUD, Keystrokes, C-Zoom, özel Nişangâh ve Spotify kontrolü.</p>
+                  <div class="profile-pills" style="margin-top:12px;">
+                    <div class="pill-row" id="profilePills">
+                      <button class="pill" data-profile="ultra_fps">⚡ Ultra FPS</button>
+                      <button class="pill active" data-profile="balanced">✦ Dengeli</button>
+                      <button class="pill" data-profile="shader">☀ Shader</button>
+                    </div>
                   </div>
+                </div>
+                <div class="skin-stage" id="skinStage" title="3D Skin Önizleme">
+                  <img class="skin-body" id="heroSkinImg" src="" alt="Karakter" hidden />
+                  <div class="skin-placeholder" id="heroSkinFallback">L</div>
+                  <div class="skin-pedestal"></div>
+                  <div class="skin-tag" id="heroSkinTag">LumSMP</div>
                 </div>
               </div>
             </div>
@@ -314,9 +319,13 @@
                 </div>
               </div>
               <p class="muted" id="updateStatusText" style="margin-bottom:10px;">Launcher açılışta yeni sürümleri otomatik kontrol eder.</p>
-              <div class="row-gap" style="flex-wrap:wrap; margin-bottom:10px;">
+              <div class="row-gap" style="flex-wrap:wrap; margin-bottom:8px;">
                 <button class="btn primary" id="btnCheckUpdate">Güncelleme Kontrol Et</button>
-                <button class="btn ghost" id="btnBackupProfile">Yedek Al (Ayar + Harita)</button>
+                <button class="btn ghost" id="btnBackupProfile">Yerel Yedek Al</button>
+              </div>
+              <div class="row-gap" style="flex-wrap:wrap; margin-bottom:8px;">
+                <button class="btn ghost" id="btnCloudSave">☁ Buluta Kaydet</button>
+                <button class="btn ghost" id="btnCloudRestore">☁ Buluttan Yükle</button>
               </div>
               <div class="row-gap" style="flex-wrap:wrap;">
                 <button class="btn ghost" id="btnSetOpenGame">Oyun Klasörü</button>

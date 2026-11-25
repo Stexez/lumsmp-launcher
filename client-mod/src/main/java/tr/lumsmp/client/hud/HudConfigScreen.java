@@ -6,11 +6,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * Sağ Shift ile açılan LumSMP Client HUD, Sürükle-Bırak & Spotify Kontrol Menüsü.
+ * Sağ Shift ile açılan LumSMP Client HUD, Keystrokes, Crosshair, Zoom & Spotify Menüsü.
  */
 public final class HudConfigScreen extends Screen {
-	private static final int CARD_W = 356;
-	private static final int CARD_H = 316;
+	private static final int CARD_W = 360;
+	private static final int CARD_H = 340;
 
 	public HudConfigScreen() {
 		super(Component.literal("LumSMP Client"));
@@ -22,71 +22,60 @@ public final class HudConfigScreen extends Screen {
 		int left = (width - CARD_W) / 2;
 		int top = (height - CARD_H) / 2;
 		int col1 = left + 16;
-		int col2 = left + 182;
-		int btnW = 158;
-		int btnH = 20;
-		int y = top + 42;
+		int col2 = left + 184;
+		int btnW = 160;
+		int btnH = 19;
+		int y = top + 38;
 
 		addRenderableWidget(Button.builder(toggleLabel("HUD Gösterimi", HudConfig.enabled), b -> {
-			HudConfig.enabled = !HudConfig.enabled;
-			HudConfig.save();
+			HudConfig.enabled = !HudConfig.enabled; HudConfig.save();
 			b.setMessage(toggleLabel("HUD Gösterimi", HudConfig.enabled));
 		}).bounds(col1, y, btnW, btnH).build());
 
-		addRenderableWidget(Button.builder(Component.literal("Konum: " + HudConfig.cornerLabel()), b -> {
-			HudConfig.hudX = -1;
-			HudConfig.hudY = -1;
-			HudConfig.spotifyX = -1;
-			HudConfig.spotifyY = -1;
-			HudConfig.corner = (HudConfig.corner + 1) % 4;
-			HudConfig.save();
-			b.setMessage(Component.literal("Konum: " + HudConfig.cornerLabel()));
-		}).bounds(col2, y, btnW, btnH).build());
+		addRenderableWidget(Button.builder(Component.literal("§6✦ Konumu Sürükle"), b ->
+			minecraft.gui.setScreen(new HudDragScreen(this))
+		).bounds(col2, y, btnW, btnH).build());
 
-		y += 23;
-		addRenderableWidget(Button.builder(toggleLabel("FPS Sayacı", HudConfig.showFps), b -> {
-			HudConfig.showFps = !HudConfig.showFps;
-			HudConfig.save();
-			b.setMessage(toggleLabel("FPS Sayacı", HudConfig.showFps));
+		y += 22;
+		addRenderableWidget(Button.builder(toggleLabel("FPS & Ping", HudConfig.showFps && HudConfig.showPing), b -> {
+			boolean next = !(HudConfig.showFps && HudConfig.showPing);
+			HudConfig.showFps = next; HudConfig.showPing = next; HudConfig.save();
+			b.setMessage(toggleLabel("FPS & Ping", next));
 		}).bounds(col1, y, btnW, btnH).build());
 
-		addRenderableWidget(Button.builder(toggleLabel("Ping (ms)", HudConfig.showPing), b -> {
-			HudConfig.showPing = !HudConfig.showPing;
-			HudConfig.save();
-			b.setMessage(toggleLabel("Ping (ms)", HudConfig.showPing));
-		}).bounds(col2, y, btnW, btnH).build());
-
-		y += 23;
 		addRenderableWidget(Button.builder(toggleLabel("CPS Sayacı", HudConfig.showCps), b -> {
-			HudConfig.showCps = !HudConfig.showCps;
-			HudConfig.save();
+			HudConfig.showCps = !HudConfig.showCps; HudConfig.save();
 			b.setMessage(toggleLabel("CPS Sayacı", HudConfig.showCps));
-		}).bounds(col1, y, btnW, btnH).build());
-
-		addRenderableWidget(Button.builder(toggleLabel("Koordinatlar", HudConfig.showCoords), b -> {
-			HudConfig.showCoords = !HudConfig.showCoords;
-			HudConfig.save();
-			b.setMessage(toggleLabel("Koordinatlar", HudConfig.showCoords));
 		}).bounds(col2, y, btnW, btnH).build());
 
-		y += 23;
-		addRenderableWidget(Button.builder(toggleLabel("Pusula / Yön", HudConfig.showDirection), b -> {
-			HudConfig.showDirection = !HudConfig.showDirection;
-			HudConfig.save();
-			b.setMessage(toggleLabel("Pusula / Yön", HudConfig.showDirection));
+		y += 22;
+		addRenderableWidget(Button.builder(toggleLabel("Keystrokes (WASD)", HudConfig.showKeystrokes), b -> {
+			HudConfig.showKeystrokes = !HudConfig.showKeystrokes; HudConfig.save();
+			b.setMessage(toggleLabel("Keystrokes (WASD)", HudConfig.showKeystrokes));
 		}).bounds(col1, y, btnW, btnH).build());
 
-		addRenderableWidget(Button.builder(toggleLabel("Gerçek Saat", HudConfig.showClock), b -> {
-			HudConfig.showClock = !HudConfig.showClock;
-			HudConfig.save();
-			b.setMessage(toggleLabel("Gerçek Saat", HudConfig.showClock));
+		addRenderableWidget(Button.builder(toggleLabel("Otomatik Koşma", HudConfig.toggleSprint), b -> {
+			HudConfig.toggleSprint = !HudConfig.toggleSprint; HudConfig.save();
+			b.setMessage(toggleLabel("Otomatik Koşma", HudConfig.toggleSprint));
 		}).bounds(col2, y, btnW, btnH).build());
 
-		y += 23;
-		addRenderableWidget(Button.builder(toggleLabel("Zırh Durumu", HudConfig.showArmor), b -> {
-			HudConfig.showArmor = !HudConfig.showArmor;
-			HudConfig.save();
-			b.setMessage(toggleLabel("Zırh Durumu", HudConfig.showArmor));
+		y += 22;
+		addRenderableWidget(Button.builder(toggleLabel("Konum & Yön", HudConfig.showCoords && HudConfig.showDirection), b -> {
+			boolean next = !(HudConfig.showCoords && HudConfig.showDirection);
+			HudConfig.showCoords = next; HudConfig.showDirection = next; HudConfig.save();
+			b.setMessage(toggleLabel("Konum & Yön", next));
+		}).bounds(col1, y, btnW, btnH).build());
+
+		addRenderableWidget(Button.builder(toggleLabel("Zırh & Saat", HudConfig.showArmor && HudConfig.showClock), b -> {
+			boolean next = !(HudConfig.showArmor && HudConfig.showClock);
+			HudConfig.showArmor = next; HudConfig.showClock = next; HudConfig.save();
+			b.setMessage(toggleLabel("Zırh & Saat", next));
+		}).bounds(col2, y, btnW, btnH).build());
+
+		y += 22;
+		addRenderableWidget(Button.builder(toggleLabel("C-Tuşu Zoom", HudConfig.zoomEnabled), b -> {
+			HudConfig.zoomEnabled = !HudConfig.zoomEnabled; HudConfig.save();
+			b.setMessage(toggleLabel("C-Tuşu Zoom", HudConfig.zoomEnabled));
 		}).bounds(col1, y, btnW, btnH).build());
 
 		addRenderableWidget(Button.builder(toggleLabel("Fullbright", HudConfig.fullbright), b -> {
@@ -94,34 +83,46 @@ public final class HudConfigScreen extends Screen {
 			b.setMessage(toggleLabel("Fullbright", HudConfig.fullbright));
 		}).bounds(col2, y, btnW, btnH).build());
 
-		y += 23;
+		y += 22;
+		addRenderableWidget(Button.builder(Component.literal("Nişangâh: §e" + HudConfig.crosshairStyleLabel()), b -> {
+			HudConfig.crosshairStyle = (HudConfig.crosshairStyle + 1) % 5; HudConfig.save();
+			b.setMessage(Component.literal("Nişangâh: §e" + HudConfig.crosshairStyleLabel()));
+		}).bounds(col1, y, btnW, btnH).build());
+
+		addRenderableWidget(Button.builder(Component.literal("Nişangâh Rengi: §d" + HudConfig.crosshairColorLabel()), b -> {
+			HudConfig.crosshairColor = (HudConfig.crosshairColor + 1) % 6; HudConfig.save();
+			b.setMessage(Component.literal("Nişangâh Rengi: §d" + HudConfig.crosshairColorLabel()));
+		}).bounds(col2, y, btnW, btnH).build());
+
+		y += 22;
 		addRenderableWidget(Button.builder(toggleLabel("Spotify HUD", HudConfig.showSpotify), b -> {
-			HudConfig.showSpotify = !HudConfig.showSpotify;
-			HudConfig.save();
+			HudConfig.showSpotify = !HudConfig.showSpotify; HudConfig.save();
 			b.setMessage(toggleLabel("Spotify HUD", HudConfig.showSpotify));
 		}).bounds(col1, y, btnW, btnH).build());
 
-		addRenderableWidget(Button.builder(Component.literal("§6✦ Konumu Sürükle"), b ->
-			minecraft.gui.setScreen(new HudDragScreen(this))
-		).bounds(col2, y, btnW, btnH).build());
+		addRenderableWidget(Button.builder(Component.literal("Köşe: " + HudConfig.cornerLabel()), b -> {
+			HudConfig.resetPositions();
+			HudConfig.corner = (HudConfig.corner + 1) % 4; HudConfig.save();
+			b.setMessage(Component.literal("Köşe: " + HudConfig.cornerLabel()));
+		}).bounds(col2, y, btnW, btnH).build());
 
 		// Spotify Medya Kontrol Bölümü
-		int spBtnY = top + 240;
-		int spW = 102;
+		int spBtnY = top + 266;
+		int spW = 104;
 		addRenderableWidget(Button.builder(Component.literal("⏮ Önceki"), b -> SpotifyController.prevTrack())
-			.bounds(col1, spBtnY, spW, 20).build());
+			.bounds(col1, spBtnY, spW, 19).build());
 		addRenderableWidget(Button.builder(Component.literal("⏯ Oynat/Dur"), b -> SpotifyController.playPause())
-			.bounds(col1 + 111, spBtnY, spW, 20).build());
+			.bounds(col1 + 112, spBtnY, spW, 19).build());
 		addRenderableWidget(Button.builder(Component.literal("Sonraki ⏭"), b -> SpotifyController.nextTrack())
-			.bounds(col1 + 222, spBtnY, spW, 20).build());
+			.bounds(col1 + 224, spBtnY, spW, 19).build());
 
 		// Alt butonlar
-		int footY = top + 280;
+		int footY = top + 306;
 		addRenderableWidget(Button.builder(Component.literal("Sıfırla"), b -> {
 			HudConfig.reset();
 			clearWidgets();
 			init();
-		}).bounds(col1, footY, 102, 20).build());
+		}).bounds(col1, footY, 104, 20).build());
 
 		addRenderableWidget(Button.builder(Component.literal("Kaydet ve Kapat"), b -> onClose())
 			.bounds(col2, footY, btnW, 20).build());
@@ -145,9 +146,9 @@ public final class HudConfigScreen extends Screen {
 		graphics.outline(left, top, CARD_W, CARD_H, 0xAA8B5CF6);
 		graphics.fill(left + 1, top + 1, left + CARD_W - 1, top + 3, 0xFFF5C969);
 
-		int spTop = top + 196;
-		graphics.fill(left + 14, spTop, left + CARD_W - 14, spTop + 72, 0xC00B1514);
-		graphics.outline(left + 14, spTop, CARD_W - 28, 72, 0x771DB954);
+		int spTop = top + 224;
+		graphics.fill(left + 14, spTop, left + CARD_W - 14, spTop + 70, 0xC00B1514);
+		graphics.outline(left + 14, spTop, CARD_W - 28, 70, 0x771DB954);
 	}
 
 	@Override
@@ -156,14 +157,14 @@ public final class HudConfigScreen extends Screen {
 		int centerX = width / 2;
 		int left = (width - CARD_W) / 2;
 		int top = (height - CARD_H) / 2;
-		graphics.centeredText(font, Component.literal("§6LUM§fSMP §7• §dİstemci HUD & Spotify"), centerX, top + 11, 0xFFF3F2FB);
-		graphics.centeredText(font, Component.literal("Sağ Shift ile aç/kapat • Konumu Sürükle ile serbestçe taşı"), centerX, top + 24, 0xFF9CA3AF);
+		graphics.centeredText(font, Component.literal("§6LUM§fSMP §7• §dİstemci & HUD Ayarları"), centerX, top + 10, 0xFFF3F2FB);
+		graphics.centeredText(font, Component.literal("Sağ Shift: Menü • C: Zoom • Sürükle-Bırak HUD"), centerX, top + 22, 0xFF9CA3AF);
 
 		String spTitle = SpotifyController.isRunning()
 			? ("♫ " + SpotifyController.currentTrack())
-			: "♫ Spotify algılanmadı (Masaüstü Spotify uygulamasını aç)";
+			: "♫ Spotify algılanmadı (Masaüstü Spotify'ı aç)";
 		if (spTitle.length() > 48) spTitle = spTitle.substring(0, 47) + "…";
-		graphics.text(font, "SPOTIFY KONTROLÜ", left + 24, top + 205, 0xFF1DB954, true);
-		graphics.text(font, spTitle, left + 24, top + 219, 0xFFE2E8F0, true);
+		graphics.text(font, "SPOTIFY KONTROLÜ", left + 24, top + 232, 0xFF1DB954, true);
+		graphics.text(font, spTitle, left + 24, top + 246, 0xFFE2E8F0, true);
 	}
 }

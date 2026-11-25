@@ -4,6 +4,7 @@
 	"package": "tr.lumsmp.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
+		"CameraMixin",
 		"ClientPacketListenerMixin",
 		"DisconnectedScreenAccessor",
 		"GuiMixin",

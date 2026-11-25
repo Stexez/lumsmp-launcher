@@ -7,11 +7,11 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 /**
- * Fare ile sürükle-bırak HUD ve Spotify konum düzenleyicisi.
+ * Fare ile sürükle-bırak HUD, Spotify ve Keystrokes konum düzenleyicisi.
  */
 public final class HudDragScreen extends Screen {
 	private final Screen parent;
-	private int draggingTarget = 0; // 0 = yok, 1 = ana HUD, 2 = Spotify
+	private int draggingTarget = 0; // 0 = yok, 1 = ana HUD, 2 = Spotify, 3 = Keystrokes
 	private int offsetX;
 	private int offsetY;
 
@@ -41,6 +41,12 @@ public final class HudDragScreen extends Screen {
 		if (super.mouseClicked(event, doubleClick)) return true;
 		int mx = (int) event.x();
 		int my = (int) event.y();
+		if (HudOverlay.lastKeysVisible && inside(mx, my, HudOverlay.lastKeysX, HudOverlay.lastKeysY, HudOverlay.lastKeysW, HudOverlay.lastKeysH)) {
+			draggingTarget = 3;
+			offsetX = mx - HudOverlay.lastKeysX;
+			offsetY = my - HudOverlay.lastKeysY;
+			return true;
+		}
 		if (HudOverlay.lastSpVisible && inside(mx, my, HudOverlay.lastSpX, HudOverlay.lastSpY, HudOverlay.lastSpW, HudOverlay.lastSpH)) {
 			draggingTarget = 2;
 			offsetX = mx - HudOverlay.lastSpX;
@@ -68,6 +74,11 @@ public final class HudDragScreen extends Screen {
 			HudConfig.spotifyY = Math.max(2, Math.min(height - HudOverlay.lastSpH - 2, (int) event.y() - offsetY));
 			return true;
 		}
+		if (draggingTarget == 3) {
+			HudConfig.keysX = Math.max(2, Math.min(width - HudOverlay.lastKeysW - 2, (int) event.x() - offsetX));
+			HudConfig.keysY = Math.max(2, Math.min(height - HudOverlay.lastKeysH - 2, (int) event.y() - offsetY));
+			return true;
+		}
 		return super.mouseDragged(event, dx, dy);
 	}
 
@@ -88,7 +99,6 @@ public final class HudDragScreen extends Screen {
 	@Override
 	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 		graphics.fill(0, 0, width, height, 0x55080912);
-		// İnce merkez kılavuz çizgileri
 		graphics.fill(width / 2, 0, width / 2 + 1, height, 0x22FFFFFF);
 		graphics.fill(0, height / 2, width, height / 2 + 1, 0x22FFFFFF);
 	}
@@ -96,6 +106,6 @@ public final class HudDragScreen extends Screen {
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 		super.extractRenderState(graphics, mouseX, mouseY, partialTick);
-		graphics.centeredText(font, Component.literal("§6HUD ve Spotify kartlarını fareyle istediğin yere sürükle"), width / 2, 14, 0xFFF8FAFC);
+		graphics.centeredText(font, Component.literal("§6HUD, Spotify ve Keystrokes kartlarını fareyle sürükle"), width / 2, 14, 0xFFF8FAFC);
 	}
 }

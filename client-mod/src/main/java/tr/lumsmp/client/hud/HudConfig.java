@@ -9,7 +9,7 @@ import net.minecraft.client.Minecraft;
 import tr.lumsmp.client.LumsmpClient;
 
 /**
- * LumSMP oyun içi HUD, Spotify ve sürükle-bırak konum ayarları.
+ * LumSMP oyun içi HUD, Keystrokes, ToggleSprint, C-Zoom, Crosshair ve Spotify ayarları.
  */
 public final class HudConfig {
 	public static boolean enabled = true;
@@ -21,14 +21,22 @@ public final class HudConfig {
 	public static boolean showClock = true;
 	public static boolean showArmor = true;
 	public static boolean showSpotify = true;
+	public static boolean showKeystrokes = true;
+	public static boolean toggleSprint = true;
+	public static boolean zoomEnabled = true;
 	public static boolean fullbright = false;
+	/** 0 = Varsayılan, 1 = Nokta, 2 = İnce Artı, 3 = Çember, 4 = Kare */
+	public static int crosshairStyle = 0;
+	/** 0 = Beyaz, 1 = Altın, 2 = Mor, 3 = Yeşil, 4 = Kırmızı, 5 = Turkuaz */
+	public static int crosshairColor = 0;
 	/** 0 = Sol Üst, 1 = Sağ Üst, 2 = Sol Alt, 3 = Sağ Alt */
 	public static int corner = 0;
-	/** -1 = köşe konumu kullanılır; >= 0 ise sürükle-bırak özel koordinat */
 	public static int hudX = -1;
 	public static int hudY = -1;
 	public static int spotifyX = -1;
 	public static int spotifyY = -1;
+	public static int keysX = -1;
+	public static int keysY = -1;
 
 	private static boolean loaded;
 	private static double savedGamma = 1.0;
@@ -57,12 +65,19 @@ public final class HudConfig {
 			showClock = Boolean.parseBoolean(props.getProperty("showClock", "true"));
 			showArmor = Boolean.parseBoolean(props.getProperty("showArmor", "true"));
 			showSpotify = Boolean.parseBoolean(props.getProperty("showSpotify", "true"));
+			showKeystrokes = Boolean.parseBoolean(props.getProperty("showKeystrokes", "true"));
+			toggleSprint = Boolean.parseBoolean(props.getProperty("toggleSprint", "true"));
+			zoomEnabled = Boolean.parseBoolean(props.getProperty("zoomEnabled", "true"));
 			fullbright = Boolean.parseBoolean(props.getProperty("fullbright", "false"));
+			crosshairStyle = Math.max(0, Math.min(4, Integer.parseInt(props.getProperty("crosshairStyle", "0"))));
+			crosshairColor = Math.max(0, Math.min(5, Integer.parseInt(props.getProperty("crosshairColor", "0"))));
 			corner = Math.max(0, Math.min(3, Integer.parseInt(props.getProperty("corner", "0"))));
 			hudX = Integer.parseInt(props.getProperty("hudX", "-1"));
 			hudY = Integer.parseInt(props.getProperty("hudY", "-1"));
 			spotifyX = Integer.parseInt(props.getProperty("spotifyX", "-1"));
 			spotifyY = Integer.parseInt(props.getProperty("spotifyY", "-1"));
+			keysX = Integer.parseInt(props.getProperty("keysX", "-1"));
+			keysY = Integer.parseInt(props.getProperty("keysY", "-1"));
 		} catch (Exception e) {
 			LumsmpClient.LOG.warn("HUD ayarları okunamadı: {}", e.getMessage());
 		}
@@ -80,12 +95,19 @@ public final class HudConfig {
 		props.setProperty("showClock", String.valueOf(showClock));
 		props.setProperty("showArmor", String.valueOf(showArmor));
 		props.setProperty("showSpotify", String.valueOf(showSpotify));
+		props.setProperty("showKeystrokes", String.valueOf(showKeystrokes));
+		props.setProperty("toggleSprint", String.valueOf(toggleSprint));
+		props.setProperty("zoomEnabled", String.valueOf(zoomEnabled));
 		props.setProperty("fullbright", String.valueOf(fullbright));
+		props.setProperty("crosshairStyle", String.valueOf(crosshairStyle));
+		props.setProperty("crosshairColor", String.valueOf(crosshairColor));
 		props.setProperty("corner", String.valueOf(corner));
 		props.setProperty("hudX", String.valueOf(hudX));
 		props.setProperty("hudY", String.valueOf(hudY));
 		props.setProperty("spotifyX", String.valueOf(spotifyX));
 		props.setProperty("spotifyY", String.valueOf(spotifyY));
+		props.setProperty("keysX", String.valueOf(keysX));
+		props.setProperty("keysY", String.valueOf(keysY));
 		try {
 			Files.createDirectories(path.getParent());
 			try (OutputStream out = Files.newOutputStream(path)) {
@@ -101,6 +123,8 @@ public final class HudConfig {
 		hudY = -1;
 		spotifyX = -1;
 		spotifyY = -1;
+		keysX = -1;
+		keysY = -1;
 		save();
 	}
 
@@ -114,12 +138,19 @@ public final class HudConfig {
 		showClock = true;
 		showArmor = true;
 		showSpotify = true;
+		showKeystrokes = true;
+		toggleSprint = true;
+		zoomEnabled = true;
 		fullbright = false;
+		crosshairStyle = 0;
+		crosshairColor = 0;
 		corner = 0;
 		hudX = -1;
 		hudY = -1;
 		spotifyX = -1;
 		spotifyY = -1;
+		keysX = -1;
+		keysY = -1;
 		applyFullbright();
 		save();
 	}
@@ -155,6 +186,38 @@ public final class HudConfig {
 			case 2 -> "Sol Alt";
 			case 3 -> "Sağ Alt";
 			default -> "Sol Üst";
+		};
+	}
+
+	public static String crosshairStyleLabel() {
+		return switch (crosshairStyle) {
+			case 1 -> "Nokta";
+			case 2 -> "İnce Artı";
+			case 3 -> "Çember";
+			case 4 -> "Kare";
+			default -> "Varsayılan";
+		};
+	}
+
+	public static String crosshairColorLabel() {
+		return switch (crosshairColor) {
+			case 1 -> "Altın";
+			case 2 -> "Mor";
+			case 3 -> "Yeşil";
+			case 4 -> "Kırmızı";
+			case 5 -> "Turkuaz";
+			default -> "Beyaz";
+		};
+	}
+
+	public static int crosshairArgb() {
+		return switch (crosshairColor) {
+			case 1 -> 0xFFF5C969;
+			case 2 -> 0xFFC084FC;
+			case 3 -> 0xFF4ADE80;
+			case 4 -> 0xFFF87171;
+			case 5 -> 0xFF38BDF8;
+			default -> 0xFFFFFFFF;
 		};
 	}
 }

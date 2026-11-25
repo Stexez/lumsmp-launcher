@@ -314,6 +314,51 @@ fn backup_profile() -> Result<Value, String> {
 }
 
 #[tauri::command]
+async fn cloud_backup_settings(state: State<'_, AppState>) -> Result<Value, String> {
+    let secrets = read_secrets();
+    let token = secrets.site_token.ok_or("Bulut senkronizasyonu için önce site hesabınla giriş yap.")?;
+    let settings = read_settings();
+    let hud_path = store::game_dir().join("config").join("lumsmp-hud.properties");
+    let hud_props = std::fs::read_to_string(&hud_path).unwrap_or_default();
+    let payload = json!({
+        "settings": settings,
+        "hudProps": hud_props
+    });
+    let client = SiteClient::new(&state.cfg)?;
+    client.cloud_save(&token, payload).await
+}
+
+#[tauri::command]
+async fn cloud_restore_settings(state: State<'_, AppState>) -> Result<Value, String> {
+    let secrets = read_secrets();
+    let token = secrets.site_token.ok_or("Bulut senkronizasyonu için önce site hesabınla giriş yap.")?;
+    let client = SiteClient::new(&state.cfg)?;
+    let res = client.cloud_get(&token).await?;
+    if res.get("found").and_then(|v| v.as_bool()) != Some(true) {
+        return Err("Hesabında kayıtlı bulut ayarı bulunamadı.".into());
+    }
+    let payload = res.get("payload").ok_or("Bulut verisi boş.")?;
+    if let Some(s_val) = payload.get("settings") {
+        let parsed: Settings = serde_json::from_value(s_val.clone()).map_err(|e| format!("Ayarlar okunamadı: {e}"))?;
+        write_settings(parsed)?;
+    }
+    if let Some(hud) = payload.get("hudProps").and_then(|v| v.as_str()) {
+        if !hud.is_empty() {
+            let hud_path = store::game_dir().join("config").join("lumsmp-hud.properties");
+            if let Some(p) = hud_path.parent() {
+                let _ = std::fs::create_dir_all(p);
+            }
+            let _ = std::fs::write(&hud_path, hud);
+        }
+    }
+    Ok(json!({
+        "ok": true,
+        "updatedAt": res.get("updatedAt"),
+        "settings": read_settings()
+    }))
+}
+
+#[tauri::command]
 fn list_shaders() -> Vec<mods::MediaEntry> {
     mods::list_folder_files(&store::game_dir(), "shaderpacks", &[".zip"])
 }
@@ -523,6 +568,8 @@ pub fn run() {
             install_resourcepack,
             list_resourcepacks,
             backup_profile,
+            cloud_backup_settings,
+            cloud_restore_settings,
             read_screenshot_data,
             delete_media,
             read_game_log,

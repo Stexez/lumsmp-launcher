@@ -117,4 +117,18 @@ impl SiteClient {
     pub async fn server_status(&self) -> Result<Value, String> {
         self.call("/api/public/server-status", "GET", None, None).await
     }
+
+    pub async fn cloud_get(&self, token: &str) -> Result<Value, String> {
+        self.call("/api/launcher/cloud-settings", "GET", None, Some(token)).await
+    }
+
+    pub async fn cloud_save(&self, token: &str, payload: Value) -> Result<Value, String> {
+        self.call(
+            "/api/launcher/cloud-settings",
+            "POST",
+            Some(json!({ "payload": payload })),
+            Some(token),
+        )
+        .await
+    }
 }

@@ -101,9 +101,18 @@ function render() {
     $('sideAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(displayName)}/64`;
     $('sideAvatar').hidden = false;
     if ($('sideAvatarFallback')) $('sideAvatarFallback').hidden = true;
+    if ($('heroSkinImg')) {
+      $('heroSkinImg').src = `https://mc-heads.net/body/${encodeURIComponent(displayName)}/150`;
+      $('heroSkinImg').hidden = false;
+    }
+    if ($('heroSkinFallback')) $('heroSkinFallback').hidden = true;
+    if ($('heroSkinTag')) $('heroSkinTag').textContent = displayName;
   } else {
     $('sideAvatar').hidden = true;
     if ($('sideAvatarFallback')) $('sideAvatarFallback').hidden = false;
+    if ($('heroSkinImg')) $('heroSkinImg').hidden = true;
+    if ($('heroSkinFallback')) $('heroSkinFallback').hidden = false;
+    if ($('heroSkinTag')) $('heroSkinTag').textContent = 'LumSMP';
   }
 
   const s = d.settings;
@@ -404,14 +413,64 @@ async function init() {
       btn.textContent = 'Yedekleniyor…';
       try {
         const res = await invoke('backup_profile');
-        $('updateStatusText').textContent = `✓ Yedek alındı: ${res.folder} (${res.count} dosya).`;
+        $('updateStatusText').textContent = `✓ Yerel yedek alındı: ${res.folder} (${res.count} dosya).`;
       } catch (e) {
         $('updateStatusText').textContent = `Yedekleme hatası: ${e}`;
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Yedek Al (Ayar + Harita)';
+        btn.textContent = 'Yerel Yedek Al';
       }
     };
+  }
+
+  if ($('btnCloudSave')) {
+    $('btnCloudSave').onclick = async () => {
+      const btn = $('btnCloudSave');
+      btn.disabled = true;
+      btn.textContent = 'Kaydediliyor…';
+      try {
+        await invoke('cloud_backup_settings');
+        $('updateStatusText').textContent = '✓ Mod, RAM ve oyun içi HUD ayarların lumcraft.com.tr bulutuna kaydedildi!';
+      } catch (e) {
+        $('updateStatusText').textContent = `Bulut hatası: ${e}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '☁ Buluta Kaydet';
+      }
+    };
+  }
+
+  if ($('btnCloudRestore')) {
+    $('btnCloudRestore').onclick = async () => {
+      const btn = $('btnCloudRestore');
+      btn.disabled = true;
+      btn.textContent = 'Yükleniyor…';
+      try {
+        const res = await invoke('cloud_restore_settings');
+        if (res && res.settings) state.data.settings = res.settings;
+        render();
+        $('updateStatusText').textContent = '✓ Buluttaki mod ve HUD ayarların başarıyla geri yüklendi!';
+      } catch (e) {
+        $('updateStatusText').textContent = `Bulut hatası: ${e}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '☁ Buluttan Yükle';
+      }
+    };
+  }
+
+  const stage = $('skinStage');
+  const skinImg = $('heroSkinImg');
+  if (stage && skinImg) {
+    stage.addEventListener('mousemove', (e) => {
+      const r = stage.getBoundingClientRect();
+      const nx = ((e.clientX - r.left) / r.width - 0.5) * 26;
+      const ny = ((e.clientY - r.top) / r.height - 0.5) * -14;
+      skinImg.style.transform = `rotateY(${nx}deg) rotateX(${ny}deg) scale(1.04)`;
+    });
+    stage.addEventListener('mouseleave', () => {
+      skinImg.style.transform = 'rotateY(0deg) rotateX(0deg) scale(1)';
+    });
   }
 
   $('btnCrashRecover').onclick = async () => {
