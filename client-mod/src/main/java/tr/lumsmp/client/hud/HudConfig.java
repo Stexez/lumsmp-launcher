@@ -20,6 +20,7 @@ public final class HudConfig {
 	public static boolean showDirection = true;
 	public static boolean showClock = true;
 	public static boolean showArmor = true;
+	public static boolean showSpotify = true;
 	public static boolean fullbright = false;
 	/** 0 = Sol Üst, 1 = Sağ Üst, 2 = Sol Alt, 3 = Sağ Alt */
 	public static int corner = 0;
@@ -50,6 +51,7 @@ public final class HudConfig {
 			showDirection = Boolean.parseBoolean(props.getProperty("showDirection", "true"));
 			showClock = Boolean.parseBoolean(props.getProperty("showClock", "true"));
 			showArmor = Boolean.parseBoolean(props.getProperty("showArmor", "true"));
+			showSpotify = Boolean.parseBoolean(props.getProperty("showSpotify", "true"));
 			fullbright = Boolean.parseBoolean(props.getProperty("fullbright", "false"));
 			corner = Math.max(0, Math.min(3, Integer.parseInt(props.getProperty("corner", "0"))));
 		} catch (Exception e) {
@@ -67,6 +69,7 @@ public final class HudConfig {
 		props.setProperty("showDirection", String.valueOf(showDirection));
 		props.setProperty("showClock", String.valueOf(showClock));
 		props.setProperty("showArmor", String.valueOf(showArmor));
+		props.setProperty("showSpotify", String.valueOf(showSpotify));
 		props.setProperty("fullbright", String.valueOf(fullbright));
 		props.setProperty("corner", String.valueOf(corner));
 		try {
@@ -87,6 +90,7 @@ public final class HudConfig {
 		showDirection = true;
 		showClock = true;
 		showArmor = true;
+		showSpotify = true;
 		fullbright = false;
 		corner = 0;
 		applyFullbright();

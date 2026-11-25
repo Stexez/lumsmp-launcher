@@ -46,6 +46,15 @@ fn bundled_jars(app: &AppHandle) -> Vec<PathBuf> {
     if let Ok(res) = app.path().resource_dir() {
         dirs_to_check.push(res.join("bundled"));
         dirs_to_check.push(res.join("src").join("bundled"));
+        dirs_to_check.push(res.join("_up_").join("src").join("bundled"));
+        dirs_to_check.push(res);
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            dirs_to_check.push(parent.join("bundled"));
+            dirs_to_check.push(parent.join("resources").join("bundled"));
+            dirs_to_check.push(parent.join("_up_").join("src").join("bundled"));
+        }
     }
     if let Ok(cwd) = std::env::current_dir() {
         dirs_to_check.push(cwd.join("src").join("bundled"));

@@ -25,6 +25,7 @@ impl AppConfig {
         let mut candidates = Vec::new();
         if let Some(dir) = resource_dir {
             candidates.push(dir.join("launcher.config.json"));
+            candidates.push(dir.join("_up_").join("launcher.config.json"));
         }
         if let Ok(cwd) = std::env::current_dir() {
             candidates.push(cwd.join("launcher.config.json"));

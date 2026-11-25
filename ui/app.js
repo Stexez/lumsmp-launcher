@@ -47,6 +47,7 @@ function render() {
   const d = state.data;
   if (!d) return;
   $('verBadge').textContent = `v${d.version}`;
+  if ($('settingsVerBadge')) $('settingsVerBadge').textContent = `v${d.version}`;
 
   if (d.announcement) {
     $('announcementBar').textContent = `✦ Duyuru: ${d.announcement}`;
@@ -65,22 +66,30 @@ function render() {
     ? `${lumin != null ? `${lumin} Lumin` : 'Hesap aktif ✓'}${rank ? ` · ${rank}` : ''}`
     : 'Oyuna girmek için lumcraft.com.tr hesabınla giriş yap';
   $('btnSiteAuth').textContent = siteName ? 'Çıkış Yap' : 'Giriş Yap';
+  $('btnSiteAuth').className = siteName ? 'btn ghost' : 'btn primary';
+  if ($('siteBadge')) {
+    $('siteBadge').textContent = siteName ? 'Bağlı ✓' : 'Gerekli';
+    $('siteBadge').className = siteName ? 'mini-badge green-badge' : 'mini-badge';
+  }
 
   if (mcName) {
     $('msUserVal').textContent = mcName;
-    $('msSubVal').textContent = 'Premium Microsoft oturumu aktif ✓';
+    $('msSubVal').textContent = 'Premium Microsoft oturumu ve skin aktif ✓';
     $('btnMsAuth').textContent = 'Bağlantıyı Kes';
     $('btnMsAuth').disabled = false;
+    if ($('msBadge')) { $('msBadge').textContent = 'Premium ✓'; $('msBadge').className = 'mini-badge green-badge'; }
   } else if (d.msConfigured) {
     $('msUserVal').textContent = 'İsteğe bağlı';
-    $('msSubVal').textContent = 'Premium skin için bağlayabilirsin';
+    $('msSubVal').textContent = 'Premium skin için Microsoft hesabını bağlayabilirsin';
     $('btnMsAuth').textContent = 'Microsoft Bağla';
     $('btnMsAuth').disabled = false;
+    if ($('msBadge')) { $('msBadge').textContent = 'İsteğe Bağlı'; $('msBadge').className = 'mini-badge muted-badge'; }
   } else {
     $('msUserVal').textContent = siteName ? `${siteName} (Site)` : 'İsteğe bağlı';
-    $('msSubVal').textContent = 'Microsoft gerekmeden site hesabıyla oynayabilirsin';
+    $('msSubVal').textContent = 'Microsoft gerekmeden site hesabınla direkt oynayabilirsin';
     $('btnMsAuth').textContent = 'Gerekmiyor';
     $('btnMsAuth').disabled = true;
+    if ($('msBadge')) { $('msBadge').textContent = 'Site Modu'; $('msBadge').className = 'mini-badge muted-badge'; }
   }
 
   const displayName = mcName || siteName;
@@ -89,8 +98,10 @@ function render() {
   if (displayName) {
     $('sideAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(displayName)}/64`;
     $('sideAvatar').hidden = false;
+    if ($('sideAvatarFallback')) $('sideAvatarFallback').hidden = true;
   } else {
     $('sideAvatar').hidden = true;
+    if ($('sideAvatarFallback')) $('sideAvatarFallback').hidden = false;
   }
 
   const s = d.settings;
@@ -98,10 +109,15 @@ function render() {
   $('setRamAuto').checked = s.ramAuto;
   $('setRamRange').max = String(d.maxRamMb);
   $('setRamRange').value = String(s.ramMb);
-  $('ramLabel').textContent = `${s.ramMb} MB`;
-  $('ramManualRow').style.opacity = s.ramAuto ? '0.45' : '1';
+  $('ramLabel').textContent = `${(s.ramMb / 1024).toFixed(1)} GB (${s.ramMb} MB)`;
+  if ($('ramRecMark')) $('ramRecMark').textContent = `Önerilen: ${(d.recommendedRamMb / 1024).toFixed(1)} GB`;
+  if ($('ramMaxMark')) $('ramMaxMark').textContent = `${Math.round(d.maxRamMb / 1024)} GB`;
+  $('ramManualRow').style.opacity = s.ramAuto ? '0.42' : '1';
   $('setRamRange').disabled = s.ramAuto;
   $('setPerfMode').value = s.perfMode;
+  document.querySelectorAll('#gcCards .gc-option').forEach((b) => {
+    b.classList.toggle('active', b.dataset.gc === s.perfMode);
+  });
   $('setDiscordRpc').checked = s.discordRpc !== false;
   $('setMinLaunch').checked = s.minimizeOnLaunch;
 
@@ -301,13 +317,21 @@ async function init() {
 
   $('modSearch').oninput = (e) => { state.modQuery = e.target.value; renderMods(); };
   $('setRamAuto').onchange = (e) => updateSettings({ ramAuto: e.target.checked });
-  $('setRamRange').oninput = (e) => { $('ramLabel').textContent = `${e.target.value} MB`; };
+  $('setRamRange').oninput = (e) => {
+    const v = Number(e.target.value);
+    $('ramLabel').textContent = `${(v / 1024).toFixed(1)} GB (${v} MB)`;
+  };
   $('setRamRange').onchange = (e) => updateSettings({ ramMb: Number(e.target.value) });
   $('setPerfMode').onchange = (e) => updateSettings({ perfMode: e.target.value });
+  document.querySelectorAll('#gcCards .gc-option').forEach((b) => {
+    b.onclick = () => updateSettings({ perfMode: b.dataset.gc });
+  });
   $('setDiscordRpc').onchange = (e) => updateSettings({ discordRpc: e.target.checked });
   $('setMinLaunch').onchange = (e) => updateSettings({ minimizeOnLaunch: e.target.checked });
 
   $('btnOpenGameDir').onclick = () => invoke('open_folder', { sub: '' });
+  if ($('btnSetOpenGame')) $('btnSetOpenGame').onclick = () => invoke('open_folder', { sub: '' });
+  if ($('btnSetOpenMods')) $('btnSetOpenMods').onclick = () => invoke('open_folder', { sub: 'mods' });
   $('btnOpenShaders').onclick = () => invoke('open_folder', { sub: 'shaderpacks' });
   $('btnOpenShots').onclick = () => invoke('open_folder', { sub: 'screenshots' });
   const closeShot = () => { $('shotModal').hidden = true; $('shotModalImg').src = ''; };

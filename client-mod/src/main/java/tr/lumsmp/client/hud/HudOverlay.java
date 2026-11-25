@@ -150,6 +150,22 @@ public final class HudOverlay {
 				ix += 22;
 			}
 		}
+
+		// Spotify Now Playing alt kartı
+		if (HudConfig.showSpotify && SpotifyController.isRunning()) {
+			String raw = SpotifyController.currentTrack();
+			if (raw.length() > 30) raw = raw.substring(0, 29) + "…";
+			String header = SpotifyController.isPlaying() ? "♫ SPOTIFY • ÇALIYOR" : "♫ SPOTIFY • DURAKLATILDI";
+			int spW = Math.max(boxW, Math.max(font.width(header), font.width(raw)) + padX * 2 + 4);
+			int spH = 29;
+			int spX = (HudConfig.corner == 1 || HudConfig.corner == 3) ? (screenW - spW - margin) : x;
+			int spY = (HudConfig.corner == 2 || HudConfig.corner == 3) ? (y - spH - 5) : (y + boxH + 5);
+			graphics.fill(spX, spY, spX + spW, spY + spH, 0xC40C1414);
+			graphics.outline(spX, spY, spW, spH, 0x661DB954);
+			graphics.fill(spX + 1, spY + 1, spX + 3, spY + spH - 1, 0xFF1DB954);
+			graphics.text(font, header, spX + padX + 2, spY + 5, 0xFF1DB954, true);
+			graphics.text(font, raw, spX + padX + 2, spY + 16, 0xFFF1F5F9, true);
+		}
 	}
 
 	private static int readPing(Minecraft mc, LocalPlayer player) {

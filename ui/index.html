@@ -10,10 +10,9 @@
   <div class="shell">
     <header class="titlebar" data-tauri-drag-region>
       <div class="brand" data-tauri-drag-region>
-        <span class="brand-dot"></span>
+        <img class="brand-logo" src="logo.png" alt="LumSMP" />
         <span class="brand-lum">LUM</span><span class="brand-smp">SMP</span>
-        <span class="badge-ver" id="verBadge">v2.0.0</span>
-        <span class="badge-engine">OneClient · Rust</span>
+        <span class="badge-ver" id="verBadge">v2.2.0</span>
       </div>
       <div class="win-controls">
         <button class="win-btn" id="btnMin" title="Küçült">—</button>
@@ -23,18 +22,28 @@
 
     <div class="workspace">
       <aside class="sidebar">
-        <nav class="nav">
-          <button class="nav-item active" data-tab="home"><span class="ico">✦</span> Ana Sayfa</button>
-          <button class="nav-item" data-tab="mods"><span class="ico">❖</span> Modlar</button>
-          <button class="nav-item" data-tab="shaders"><span class="ico">☀</span> Shaderlar</button>
-          <button class="nav-item" data-tab="gallery"><span class="ico">◈</span> Galeri (F2)</button>
-          <button class="nav-item" data-tab="logs"><span class="ico">▤</span> Oyun Logu</button>
-          <button class="nav-item" data-tab="settings"><span class="ico">⚙</span> Ayarlar</button>
-        </nav>
+        <div class="nav-groups">
+          <div class="nav-label">OYUN</div>
+          <nav class="nav">
+            <button class="nav-item active" data-tab="home"><span class="ico">✦</span> Ana Sayfa</button>
+            <button class="nav-item" data-tab="mods"><span class="ico">❖</span> Modlar</button>
+            <button class="nav-item" data-tab="shaders"><span class="ico">☀</span> Shaderlar</button>
+          </nav>
+
+          <div class="nav-label">ARAÇLAR</div>
+          <nav class="nav">
+            <button class="nav-item" data-tab="gallery"><span class="ico">◈</span> Galeri (F2)</button>
+            <button class="nav-item" data-tab="logs"><span class="ico">▤</span> Oyun Logu</button>
+            <button class="nav-item" data-tab="settings"><span class="ico">⚙</span> Ayarlar</button>
+          </nav>
+        </div>
 
         <div class="sidebar-footer">
           <div class="account-pill">
-            <img class="avatar" id="sideAvatar" src="" alt="" hidden />
+            <div class="avatar-wrap">
+              <img class="avatar" id="sideAvatar" src="" alt="" hidden />
+              <div class="avatar-fallback" id="sideAvatarFallback">L</div>
+            </div>
             <div class="acc-meta">
               <div class="acc-name" id="sideName">Giriş Yapılmadı</div>
               <div class="acc-sub" id="sideSub">lumcraft.com.tr</div>
@@ -49,43 +58,60 @@
           <div class="hero">
             <div class="banner-notice" id="updateBar" hidden></div>
             <div class="banner-notice" id="announcementBar" hidden></div>
-            <div class="hero-top">
-              <div>
-                <div class="status-chip"><span class="pulse"></span> <span id="serverStatusText">Sunucu kontrol ediliyor…</span></div>
-                <h1 class="hero-title">LUM SMP <span class="accent">26.3</span></h1>
-                <p class="hero-sub">OneClient mimarili ultra hafif Rust launcher · Oyun içi Sağ Shift HUD, otomatik Fabric & Java 25.</p>
-              </div>
-              <div class="profile-pills">
-                <div class="pill-label">Performans Profili</div>
-                <div class="pill-row" id="profilePills">
-                  <button class="pill" data-profile="ultra_fps">Ultra FPS</button>
-                  <button class="pill active" data-profile="balanced">Dengeli</button>
-                  <button class="pill" data-profile="shader">Shader</button>
+
+            <div class="hero-banner">
+              <div class="hero-top">
+                <div>
+                  <div class="status-chip"><span class="pulse"></span> <span id="serverStatusText">Sunucu kontrol ediliyor…</span></div>
+                  <h1 class="hero-title"><span class="gold-text">LUM</span> SMP <span class="ver-pill">26.3</span></h1>
+                  <p class="hero-sub">Resmî LumSMP istemcisi — otomatik Fabric & Java 25, korumalı giriş, oyun içi <strong>Sağ Shift</strong> HUD ve Spotify kontrolü.</p>
+                </div>
+                <div class="profile-pills">
+                  <div class="pill-label">Performans Profili</div>
+                  <div class="pill-row" id="profilePills">
+                    <button class="pill" data-profile="ultra_fps">⚡ Ultra FPS</button>
+                    <button class="pill active" data-profile="balanced">✦ Dengeli</button>
+                    <button class="pill" data-profile="shader">☀ Shader</button>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div class="cards-grid">
-              <div class="glass-card">
-                <div class="card-kicker">LUMCRAFT HESABI</div>
+              <div class="glass-card feature-card">
+                <div class="card-head">
+                  <span class="card-kicker">LUMCRAFT HESABI</span>
+                  <span class="mini-badge" id="siteBadge">Gerekli</span>
+                </div>
                 <div class="card-val" id="siteUserVal">Bağlı değil</div>
-                <div class="card-sub" id="siteStatsVal">Lumin & VIP bilgisi için giriş yap</div>
+                <div class="card-sub" id="siteStatsVal">Oyuna girmek için lumcraft.com.tr hesabınla giriş yap</div>
                 <div class="card-actions">
-                  <button class="btn ghost" id="btnSiteAuth">Giriş Yap</button>
+                  <button class="btn primary" id="btnSiteAuth">Giriş Yap</button>
                 </div>
               </div>
-              <div class="glass-card">
-                <div class="card-kicker">MİNECRAFT (MİCROSOFT)</div>
+
+              <div class="glass-card feature-card ms-card">
+                <div class="card-head">
+                  <span class="card-kicker">
+                    <span class="ms-squares" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    MİCROSOFT PREMİUM
+                  </span>
+                  <span class="mini-badge muted-badge" id="msBadge">İsteğe Bağlı</span>
+                </div>
                 <div class="card-val" id="msUserVal">Bağlı değil</div>
-                <div class="card-sub" id="msSubVal">Orijinal Minecraft hesabı gerekir</div>
+                <div class="card-sub" id="msSubVal">Site hesabıyla direkt oynayabilir veya premium bağlayabilirsin</div>
                 <div class="card-actions">
                   <button class="btn ghost" id="btnMsAuth">Microsoft Bağla</button>
                 </div>
               </div>
-              <div class="glass-card">
-                <div class="card-kicker">KURULUM & PERFORMANS</div>
-                <div class="card-val" id="setupSummary">7 Mod · 4 GB RAM</div>
-                <div class="card-sub">Sağ Shift ile oyun içi HUD menüsü</div>
+
+              <div class="glass-card feature-card">
+                <div class="card-head">
+                  <span class="card-kicker">İSTEMCİ & HUD</span>
+                  <span class="mini-badge green-badge">Aktif</span>
+                </div>
+                <div class="card-val" id="setupSummary">7 Mod · 4.0 GB RAM</div>
+                <div class="card-sub">Oyun içi Sağ Shift: FPS, Ping, Zırh, Fullbright & Spotify</div>
                 <div class="card-actions">
                   <button class="btn ghost" id="btnOpenGameDir">Oyun Klasörü</button>
                 </div>
@@ -109,7 +135,7 @@
           <div class="panel-head">
             <div>
               <h2>İzinli İstemci Modları</h2>
-              <p class="muted">Zorunlu modlar (LumPhone, VoiceChat, Fabric API) otomatik kurulur.</p>
+              <p class="muted">Zorunlu modlar (LumPhone, VoiceChat, LumSMP Client) otomatik kurulur.</p>
             </div>
             <input class="search" id="modSearch" type="text" placeholder="Mod ara…" />
           </div>
@@ -158,7 +184,7 @@
           <div class="panel-head">
             <div>
               <h2>Canlı Oyun Log Konsolu</h2>
-              <p class="muted">Oyun çıktısı (erişim anahtarları otomatik maskelenir).</p>
+              <p class="muted">Oyun çıktısı (erişim anahtarları otomatik gizlenir).</p>
             </div>
             <div class="row-gap">
               <button class="btn ghost" id="btnRefreshLogs">Yenile</button>
@@ -168,60 +194,121 @@
           <pre class="log-box" id="logBox">Yükleniyor…</pre>
         </section>
 
-        <!-- SETTINGS -->
+        <!-- SETTINGS (REDESIGNED BENTO GRID) -->
         <section class="panel" id="tab-settings">
           <div class="panel-head">
             <div>
-              <h2>Launcher & Java Ayarları</h2>
-              <p class="muted">Bellek, çöp toplayıcı (GC), Discord Rich Presence ve pencere davranışı.</p>
+              <h2>Ayarlar</h2>
+              <p class="muted">Bellek, Java performans motoru, entegrasyonlar ve güncelleme ayarları.</p>
             </div>
+            <span class="badge-ver" id="settingsVerBadge">v2.2.0</span>
           </div>
-          <div class="settings-list">
-            <div class="glass-card setting-row">
-              <div>
-                <div class="setting-title">Otomatik RAM Ayarı</div>
-                <div class="muted">Bilgisayarının belleğine göre en akıcı RAM miktarını seçer.</div>
+
+          <div class="settings-grid">
+            <!-- RAM CARD -->
+            <div class="glass-card set-card">
+              <div class="set-card-head">
+                <div>
+                  <div class="card-kicker">BELLEK (RAM)</div>
+                  <div class="set-card-title">Minecraft RAM Ayarı</div>
+                </div>
+                <span class="ram-chip" id="ramLabel">4096 MB</span>
               </div>
-              <label class="switch"><input type="checkbox" id="setRamAuto" /><span></span></label>
+
+              <div class="set-row-inline">
+                <div>
+                  <div class="setting-title">Otomatik RAM Yönetimi</div>
+                  <div class="muted">Bilgisayarının belleğine göre en akıcı değeri seçer.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="setRamAuto" /><span></span></label>
+              </div>
+
+              <div class="ram-slider-box" id="ramManualRow">
+                <input type="range" class="range" id="setRamRange" min="2048" max="16384" step="512" value="4096" />
+                <div class="ram-marks">
+                  <span>2 GB</span>
+                  <span id="ramRecMark">Önerilen</span>
+                  <span id="ramMaxMark">16 GB</span>
+                </div>
+              </div>
             </div>
-            <div class="glass-card setting-row" id="ramManualRow">
-              <div>
-                <div class="setting-title">RAM Miktarı: <span class="accent" id="ramLabel">4096 MB</span></div>
-                <div class="muted">2 GB – 16 GB arası ayarlanabilir.</div>
+
+            <!-- GC ENGINE CARD -->
+            <div class="glass-card set-card">
+              <div class="set-card-head">
+                <div>
+                  <div class="card-kicker">JAVA PERFORMANS</div>
+                  <div class="set-card-title">Çöp Toplayıcı (GC) Motoru</div>
+                </div>
               </div>
-              <input type="range" id="setRamRange" min="2048" max="16384" step="512" value="4096" />
-            </div>
-            <div class="glass-card setting-row">
-              <div>
-                <div class="setting-title">Java Çöp Toplayıcı (GC)</div>
-                <div class="muted">Otomatik (Önerilen), G1GC (Dengeli) veya ZGC (Düşük gecikme).</div>
+              <div class="gc-grid" id="gcCards">
+                <button class="gc-option active" data-gc="auto" type="button">
+                  <strong>Otomatik</strong>
+                  <span>Önerilen dengeli ayar</span>
+                </button>
+                <button class="gc-option" data-gc="g1" type="button">
+                  <strong>G1GC</strong>
+                  <span>4-8 GB RAM için stabil</span>
+                </button>
+                <button class="gc-option" data-gc="zgc" type="button">
+                  <strong>ZGC</strong>
+                  <span>8+ GB RAM · Sıfır takılma</span>
+                </button>
               </div>
-              <select class="select" id="setPerfMode">
+              <select id="setPerfMode" hidden>
                 <option value="auto">Otomatik</option>
-                <option value="g1">G1GC (Dengeli)</option>
-                <option value="zgc">ZGC (Yüksek RAM)</option>
+                <option value="g1">G1GC</option>
+                <option value="zgc">ZGC</option>
               </select>
             </div>
-            <div class="glass-card setting-row">
-              <div>
-                <div class="setting-title">Discord Rich Presence</div>
-                <div class="muted">Discord profilinde canlı olarak LumSMP oynadığını gösterir.</div>
+
+            <!-- INTEGRATIONS CARD -->
+            <div class="glass-card set-card">
+              <div class="set-card-head">
+                <div>
+                  <div class="card-kicker">ENTEGRASYONLAR</div>
+                  <div class="set-card-title">Pencere & Oyun İçi Özellikler</div>
+                </div>
               </div>
-              <label class="switch"><input type="checkbox" id="setDiscordRpc" /><span></span></label>
+              <div class="set-row-inline">
+                <div>
+                  <div class="setting-title">Discord Rich Presence</div>
+                  <div class="muted">Discord profilinde canlı LumSMP durumunu gösterir.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="setDiscordRpc" /><span></span></label>
+              </div>
+              <div class="set-divider"></div>
+              <div class="set-row-inline">
+                <div>
+                  <div class="setting-title">Oyun Açılınca Küçült</div>
+                  <div class="muted">Minecraft başladığında launcher simge durumuna iner.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="setMinLaunch" /><span></span></label>
+              </div>
+              <div class="set-divider"></div>
+              <div class="set-row-inline">
+                <div>
+                  <div class="setting-title">Oyun İçi HUD & Spotify Kontrolü</div>
+                  <div class="muted">Oyun içinde <strong>Sağ Shift</strong> ile FPS, Ping, Zırh ve Spotify'ı yönet.</div>
+                </div>
+                <span class="mini-badge green-badge">Sağ Shift</span>
+              </div>
             </div>
-            <div class="glass-card setting-row">
-              <div>
-                <div class="setting-title">Oyun Açılınca Küçült</div>
-                <div class="muted">Minecraft başlayınca launcher arka plana alınır.</div>
+
+            <!-- SYSTEM & UPDATES CARD -->
+            <div class="glass-card set-card">
+              <div class="set-card-head">
+                <div>
+                  <div class="card-kicker">SİSTEM & GÜNCELLEME</div>
+                  <div class="set-card-title">Otomatik Güncelleme & Klasörler</div>
+                </div>
               </div>
-              <label class="switch"><input type="checkbox" id="setMinLaunch" /><span></span></label>
-            </div>
-            <div class="glass-card setting-row">
-              <div>
-                <div class="setting-title">Otomatik Güncelleme</div>
-                <div class="muted" id="updateStatusText">Launcher açılışta GitHub üzerinden yeni sürümleri otomatik kontrol eder.</div>
+              <p class="muted" id="updateStatusText" style="margin-bottom:12px;">Launcher açılışta yeni sürümleri otomatik kontrol eder.</p>
+              <div class="row-gap" style="flex-wrap:wrap;">
+                <button class="btn primary" id="btnCheckUpdate">Güncelleme Kontrol Et</button>
+                <button class="btn ghost" id="btnSetOpenGame">Oyun Klasörü</button>
+                <button class="btn ghost" id="btnSetOpenMods">Modlar</button>
               </div>
-              <button class="btn ghost" id="btnCheckUpdate">Güncelleme Kontrol Et</button>
             </div>
           </div>
         </section>
@@ -232,7 +319,10 @@
   <!-- Site Login Modal -->
   <div class="modal-backdrop" id="loginModal" hidden>
     <div class="modal">
-      <h3>lumcraft.com.tr Girişi</h3>
+      <div class="modal-brand">
+        <img class="brand-logo" src="logo.png" alt="LumSMP" />
+        <h3>lumcraft.com.tr Girişi</h3>
+      </div>
       <p class="muted">Sitede kayıtlı <strong>Minecraft kullanıcı adın</strong> ve parolanla giriş yap.</p>
       <input class="field" id="loginUser" type="text" placeholder="Minecraft kullanıcı adın (3-16 karakter)" autocomplete="username" />
       <input class="field" id="loginPass" type="password" placeholder="Parola" autocomplete="current-password" />

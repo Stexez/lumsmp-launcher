@@ -28,6 +28,7 @@ public final class LumsmpClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		tr.lumsmp.client.hud.HudConfig.load();
+		tr.lumsmp.client.hud.SpotifyController.start();
 	}
 
 	public static boolean active() {
