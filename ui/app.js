@@ -62,18 +62,32 @@ function render() {
 
   $('siteUserVal').textContent = siteName || 'Bağlı değil';
   $('siteStatsVal').textContent = siteName
-    ? `${lumin != null ? `${lumin} Lumin` : 'Cüzdan bağlı'}${rank ? ` · ${rank}` : ''}`
-    : 'Lumin & VIP bilgisi için giriş yap';
+    ? `${lumin != null ? `${lumin} Lumin` : 'Hesap aktif ✓'}${rank ? ` · ${rank}` : ''}`
+    : 'Oyuna girmek için lumcraft.com.tr hesabınla giriş yap';
   $('btnSiteAuth').textContent = siteName ? 'Çıkış Yap' : 'Giriş Yap';
 
-  $('msUserVal').textContent = mcName || 'Bağlı değil';
-  $('msSubVal').textContent = mcName ? 'Microsoft oturumu aktif ✓' : 'Orijinal Minecraft hesabı gerekir';
-  $('btnMsAuth').textContent = mcName ? 'Bağlantıyı Kes' : 'Microsoft Bağla';
-
-  $('sideName').textContent = mcName || siteName || 'Giriş Yapılmadı';
-  $('sideSub').textContent = siteName ? `lumcraft.com.tr · ${siteName}` : 'lumcraft.com.tr';
   if (mcName) {
-    $('sideAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(mcName)}/64`;
+    $('msUserVal').textContent = mcName;
+    $('msSubVal').textContent = 'Premium Microsoft oturumu aktif ✓';
+    $('btnMsAuth').textContent = 'Bağlantıyı Kes';
+    $('btnMsAuth').disabled = false;
+  } else if (d.msConfigured) {
+    $('msUserVal').textContent = 'İsteğe bağlı';
+    $('msSubVal').textContent = 'Premium skin için bağlayabilirsin';
+    $('btnMsAuth').textContent = 'Microsoft Bağla';
+    $('btnMsAuth').disabled = false;
+  } else {
+    $('msUserVal').textContent = siteName ? `${siteName} (Site)` : 'İsteğe bağlı';
+    $('msSubVal').textContent = 'Microsoft gerekmeden site hesabıyla oynayabilirsin';
+    $('btnMsAuth').textContent = 'Gerekmiyor';
+    $('btnMsAuth').disabled = true;
+  }
+
+  const displayName = mcName || siteName;
+  $('sideName').textContent = displayName || 'Giriş Yapılmadı';
+  $('sideSub').textContent = siteName ? `lumcraft.com.tr · ${siteName}` : 'lumcraft.com.tr';
+  if (displayName) {
+    $('sideAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(displayName)}/64`;
     $('sideAvatar').hidden = false;
   } else {
     $('sideAvatar').hidden = true;
@@ -95,8 +109,8 @@ function render() {
     btn.classList.toggle('active', btn.dataset.profile === s.profile);
   });
 
-  $('btnPlay').disabled = d.playing || !siteName || !mcName;
-  $('btnPlay').textContent = d.playing ? 'OYUN AÇIK' : 'OYNA';
+  $('btnPlay').disabled = d.playing || !siteName;
+  $('btnPlay').textContent = d.playing ? 'OYUN AÇIK' : (siteName ? 'OYNA' : 'GİRİŞ YAP');
 
   renderMods();
 }
@@ -245,8 +259,8 @@ async function updateSettings(patch) {
 async function refreshStatus() {
   try {
     const st = await invoke('get_server_status');
-    const online = st?.players?.online ?? st?.online ?? 0;
-    const max = st?.players?.max ?? st?.max ?? 100;
+    const online = typeof st?.players === 'number' ? st.players : (st?.players?.online ?? 0);
+    const max = typeof st?.max === 'number' ? st.max : (st?.players?.max ?? 100);
     $('serverStatusText').textContent = st?.online === false
       ? 'Sunucu bakımda'
       : `LumSMP Çevrimiçi · ${online} / ${max} Oyuncu`;
@@ -314,10 +328,15 @@ async function init() {
     }
   };
   $('btnLoginCancel').onclick = () => { $('loginModal').hidden = true; };
-  $('btnLoginSubmit').onclick = async () => {
+  $('loginModal').addEventListener('click', (e) => { if (e.target === $('loginModal')) $('loginModal').hidden = true; });
+  const submitLogin = async () => {
+    const btn = $('btnLoginSubmit');
+    if (btn.disabled) return;
     $('loginErr').hidden = true;
+    btn.disabled = true;
+    btn.textContent = 'Giriş yapılıyor…';
     try {
-      await invoke('site_login', { username: $('loginUser').value, password: $('loginPass').value });
+      await invoke('site_login', { username: $('loginUser').value.trim(), password: $('loginPass').value });
       $('loginModal').hidden = true;
       $('loginPass').value = '';
       state.data = await invoke('bootstrap');
@@ -325,8 +344,14 @@ async function init() {
     } catch (err) {
       $('loginErr').textContent = String(err);
       $('loginErr').hidden = false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Giriş Yap';
     }
   };
+  $('btnLoginSubmit').onclick = submitLogin;
+  $('loginUser').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('loginPass').focus(); });
+  $('loginPass').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
 
   $('btnMsAuth').onclick = async () => {
     showError('');

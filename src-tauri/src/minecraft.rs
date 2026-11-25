@@ -463,7 +463,7 @@ pub fn spawn_game(
         "--uuid".into(), auth.uuid.clone(),
         "--accessToken".into(), auth.access_token.clone(),
         "--xuid".into(), auth.xuid.clone(),
-        "--userType".into(), "msa".into(),
+        "--userType".into(), (if auth.access_token == "0" { "legacy" } else { "msa" }).into(),
         "--versionType".into(), "release".into(),
     ]);
     if !has_client_mod {

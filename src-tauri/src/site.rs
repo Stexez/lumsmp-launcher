@@ -27,10 +27,10 @@ pub struct ManifestServer {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LauncherManifest {
     pub minecraft: String,
-    #[serde(default)]
+    #[serde(default, alias = "fabricLoader")]
     pub fabric_loader: Option<String>,
     pub server: ManifestServer,
-    #[serde(default)]
+    #[serde(default, alias = "news")]
     pub announcement: Option<String>,
     #[serde(default)]
     pub mods: Vec<SiteMod>,

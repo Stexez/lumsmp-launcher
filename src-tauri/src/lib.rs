@@ -76,7 +76,23 @@ async fn bootstrap(state: State<'_, AppState>) -> Result<BootstrapPayload, Strin
             if let Ok(m) = client.manifest(tok).await {
                 announcement = m.announcement;
             }
-            client.me(tok).await.ok()
+            match client.me(tok).await {
+                Ok(me) => {
+                    if let Some(u) = me.get("username").and_then(|v| v.as_str()) {
+                        if secrets.site_user.as_deref() != Some(u) {
+                            let mut next = secrets.clone();
+                            next.site_user = Some(u.to_string());
+                            let _ = write_secrets(&next);
+                        }
+                    }
+                    Some(me)
+                }
+                Err(_) => secrets
+                    .site_user
+                    .as_ref()
+                    .filter(|u| !u.is_empty())
+                    .map(|u| json!({ "username": u })),
+            }
         }
         _ => None,
     };
@@ -114,11 +130,24 @@ async fn bootstrap(state: State<'_, AppState>) -> Result<BootstrapPayload, Strin
 
 #[tauri::command]
 async fn site_login(state: State<'_, AppState>, username: String, password: String) -> Result<Value, String> {
+    let trimmed = username.trim();
+    if trimmed.len() < 3 || trimmed.len() > 16 || !trimmed.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+        return Err("Kullanıcı adı 3-16 karakter; yalnızca harf, rakam ve _ olabilir.".into());
+    }
+    if password.is_empty() {
+        return Err("Parolanı yaz.".into());
+    }
     let client = SiteClient::new(&state.cfg)?;
-    let res = client.login(username.trim(), &password).await?;
+    let res = client.login(trimmed, &password).await?;
     let token = res.get("token").and_then(|v| v.as_str()).ok_or("Oturum anahtarı alınamadı.")?;
+    let account_name = res
+        .pointer("/account/username")
+        .and_then(|v| v.as_str())
+        .unwrap_or(trimmed)
+        .to_string();
     let mut sec = read_secrets();
     sec.site_token = Some(token.to_string());
+    sec.site_user = Some(account_name);
     write_secrets(&sec)?;
     Ok(res)
 }
@@ -131,6 +160,7 @@ async fn site_logout(state: State<'_, AppState>) -> Result<(), String> {
             let _ = client.logout(&tok).await;
         }
     }
+    sec.site_user = None;
     write_secrets(&sec)
 }
 
@@ -240,14 +270,31 @@ async fn launch_game(app: AppHandle, state: State<'_, AppState>) -> Result<Value
     let result: Result<Value, String> = async {
         let secrets = read_secrets();
         let site_token = secrets.site_token.clone().ok_or("Önce lumcraft.com.tr hesabınla giriş yap.")?;
-        let mc_auth = state
-            .mc_auth
-            .lock()
-            .unwrap()
-            .clone()
-            .ok_or("Önce Microsoft (Minecraft) hesabını bağla.")?;
-
         let client = SiteClient::new(&state.cfg)?;
+        let site_username = match secrets.site_user.clone().filter(|u| !u.is_empty()) {
+            Some(u) => u,
+            None => client
+                .me(&site_token)
+                .await?
+                .get("username")
+                .and_then(|v| v.as_str())
+                .ok_or("Site kullanıcı adı okunamadı. Tekrar giriş yap.")?
+                .to_string(),
+        };
+
+        let mc_auth = match state.mc_auth.lock().unwrap().clone() {
+            Some(ms) => {
+                if !ms.name.eq_ignore_ascii_case(&site_username) {
+                    return Err(format!(
+                        "LumSMP hesabın '{}', Microsoft adın '{}'. İkisi aynı olmalı.",
+                        site_username, ms.name
+                    ));
+                }
+                ms
+            }
+            None => microsoft::offline_auth(&site_username),
+        };
+
         let manifest = client.manifest(&site_token).await?;
         let root = store::game_dir();
         let settings = read_settings();
@@ -312,8 +359,25 @@ async fn launch_game(app: AppHandle, state: State<'_, AppState>) -> Result<Value
         let app_exit = app.clone();
         let root_exit = root.clone();
         let rpc_enabled = settings.discord_rpc;
+        let running_flag = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let hb_flag = std::sync::Arc::clone(&running_flag);
+        let hb_cfg = state.cfg.clone();
+        let hb_token = site_token.clone();
+        let hb_name = mc_auth.name.clone();
+        tauri::async_runtime::spawn(async move {
+            while hb_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+                if !hb_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                    break;
+                }
+                if let Ok(c) = SiteClient::new(&hb_cfg) {
+                    let _ = c.play_ticket(&hb_token, &hb_name).await;
+                }
+            }
+        });
         std::thread::spawn(move || {
             let code = child.wait().ok().and_then(|s| s.code()).unwrap_or(-1);
+            running_flag.store(false, std::sync::atomic::Ordering::Relaxed);
             let crash_hint = if code != 0 { minecraft::analyze_crash(&root_exit) } else { None };
             if let Some(st) = app_exit.try_state::<AppState>() {
                 *st.playing.lock().unwrap() = false;

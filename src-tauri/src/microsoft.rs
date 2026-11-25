@@ -32,6 +32,21 @@ pub struct MsLoginResult {
     pub minecraft: MinecraftAuth,
 }
 
+/// Offline / site-account authentication (exact Minecraft OfflinePlayer:<name> v3 UUID).
+pub fn offline_auth(username: &str) -> MinecraftAuth {
+    use md5::{Digest as Md5Digest, Md5};
+    let mut hash = Md5::digest(format!("OfflinePlayer:{username}").as_bytes());
+    hash[6] = (hash[6] & 0x0f) | 0x30;
+    hash[8] = (hash[8] & 0x3f) | 0x80;
+    MinecraftAuth {
+        access_token: "0".into(),
+        expires_at: u64::MAX,
+        uuid: hex::encode(hash),
+        name: username.to_string(),
+        xuid: "0".into(),
+    }
+}
+
 fn now_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)

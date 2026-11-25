@@ -233,13 +233,13 @@
   <div class="modal-backdrop" id="loginModal" hidden>
     <div class="modal">
       <h3>lumcraft.com.tr Girişi</h3>
-      <p class="muted">LumSMP hesabınla giriş yap.</p>
-      <input class="field" id="loginUser" type="text" placeholder="Kullanıcı adı veya e-posta" />
-      <input class="field" id="loginPass" type="password" placeholder="Şifre" />
+      <p class="muted">Sitede kayıtlı <strong>Minecraft kullanıcı adın</strong> ve parolanla giriş yap.</p>
+      <input class="field" id="loginUser" type="text" placeholder="Minecraft kullanıcı adın (3-16 karakter)" autocomplete="username" />
+      <input class="field" id="loginPass" type="password" placeholder="Parola" autocomplete="current-password" />
       <div class="alert error" id="loginErr" hidden></div>
       <div class="modal-actions">
-        <button class="btn ghost" id="btnLoginCancel">İptal</button>
-        <button class="btn primary" id="btnLoginSubmit">Giriş Yap</button>
+        <button class="btn ghost" id="btnLoginCancel" type="button">İptal</button>
+        <button class="btn primary" id="btnLoginSubmit" type="button">Giriş Yap</button>
       </div>
     </div>
   </div>

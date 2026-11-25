@@ -7,6 +7,8 @@ use sysinfo::System;
 #[serde(rename_all = "camelCase")]
 pub struct Secrets {
     pub site_token: Option<String>,
+    #[serde(default)]
+    pub site_user: Option<String>,
     pub ms_refresh_token: Option<String>,
 }
 
