@@ -373,6 +373,36 @@ async function init() {
     render();
   });
 
+  await listen('update-state', ({ payload }) => {
+    const bar = $('updateBar');
+    const st = $('updateStatusText');
+    if (payload.state === 'downloading' || payload.state === 'installing') {
+      bar.hidden = false;
+      bar.textContent = `⬆ ${payload.message || 'Güncelleniyor…'}`;
+      if (st) st.textContent = payload.message || 'Güncelleniyor…';
+    } else if (payload.message) {
+      if (st) st.textContent = payload.message;
+      bar.hidden = true;
+    } else {
+      bar.hidden = true;
+    }
+  });
+
+  $('btnCheckUpdate').onclick = async () => {
+    const btn = $('btnCheckUpdate');
+    btn.disabled = true;
+    btn.textContent = 'Kontrol ediliyor…';
+    try {
+      const res = await invoke('check_for_updates');
+      if (res && res.message) $('updateStatusText').textContent = res.message;
+    } catch (e) {
+      $('updateStatusText').textContent = String(e);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Güncelleme Kontrol Et';
+    }
+  };
+
   state.catalog = await invoke('get_catalog');
   state.shaderCatalog = await invoke('get_shader_catalog');
   state.data = await invoke('bootstrap');

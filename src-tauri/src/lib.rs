@@ -5,6 +5,7 @@ mod mods;
 mod rpc;
 mod site;
 mod store;
+mod updater;
 
 use config::AppConfig;
 use microsoft::MinecraftAuth;
@@ -335,6 +336,11 @@ async fn launch_game(app: AppHandle, state: State<'_, AppState>) -> Result<Value
     result
 }
 
+#[tauri::command]
+async fn check_for_updates(app: AppHandle) -> Result<updater::UpdateEvent, String> {
+    updater::run_check(&app, true).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -349,10 +355,12 @@ pub fn run() {
                 playing: Mutex::new(false),
                 rpc: RpcManager::new(),
             });
+            updater::start_background_check(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             bootstrap,
+            check_for_updates,
             site_login,
             site_logout,
             ms_login,

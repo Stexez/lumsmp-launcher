@@ -47,6 +47,7 @@
         <!-- HOME -->
         <section class="panel active" id="tab-home">
           <div class="hero">
+            <div class="banner-notice" id="updateBar" hidden></div>
             <div class="banner-notice" id="announcementBar" hidden></div>
             <div class="hero-top">
               <div>
@@ -214,6 +215,13 @@
                 <div class="muted">Minecraft başlayınca launcher arka plana alınır.</div>
               </div>
               <label class="switch"><input type="checkbox" id="setMinLaunch" /><span></span></label>
+            </div>
+            <div class="glass-card setting-row">
+              <div>
+                <div class="setting-title">Otomatik Güncelleme</div>
+                <div class="muted" id="updateStatusText">Launcher açılışta GitHub üzerinden yeni sürümleri otomatik kontrol eder.</div>
+              </div>
+              <button class="btn ghost" id="btnCheckUpdate">Güncelleme Kontrol Et</button>
             </div>
           </div>
         </section>
