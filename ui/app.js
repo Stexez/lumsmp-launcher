@@ -291,7 +291,10 @@ async function init() {
   $('btnOpenGameDir').onclick = () => invoke('open_folder', { sub: '' });
   $('btnOpenShaders').onclick = () => invoke('open_folder', { sub: 'shaderpacks' });
   $('btnOpenShots').onclick = () => invoke('open_folder', { sub: 'screenshots' });
-  $('btnShotClose').onclick = () => { $('shotModal').hidden = true; };
+  const closeShot = () => { $('shotModal').hidden = true; $('shotModalImg').src = ''; };
+  $('btnShotClose').onclick = closeShot;
+  $('shotModal').addEventListener('click', (e) => { if (e.target === $('shotModal')) closeShot(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeShot(); $('loginModal').hidden = true; } });
   $('btnRefreshLogs').onclick = refreshLogs;
   $('btnCopyLogs').onclick = async () => {
     await navigator.clipboard.writeText($('logBox').textContent);
