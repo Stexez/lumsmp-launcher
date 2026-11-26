@@ -52,7 +52,7 @@
       <header class="titlebar" data-tauri-drag-region>
         <div class="title-left" data-tauri-drag-region>
           <span class="wordmark">LUM<span>SMP</span></span>
-          <span class="ver-tag" id="verBadge">v2.7.0</span>
+          <span class="ver-tag" id="verBadge">v2.8.0</span>
           <span class="online-pill"><i class="dot"></i><span id="serverStatusText">Sunucu kontrol ediliyor…</span></span>
           <button class="ip-pill" id="btnCopyIp" type="button" title="Sunucu adresini kopyala">lumcraft.com.tr <small id="ipCopyHint">Kopyala</small></button>
         </div>
@@ -71,37 +71,21 @@
         <!-- HOME: FULL-BLEED CINEMATIC LAUNCHER VIEW -->
         <section class="view active home-view" id="tab-home">
           <div class="home-backdrop"></div>
-          <div class="home-vignette"></div>
+          <div class="home-moon"></div>
 
           <div class="home-inner">
             <div class="home-body">
               <!-- LEFT: BRANDING + NEWS FEED -->
               <div class="home-left">
-                <div class="eyebrow">MINECRAFT 26.3 · FABRIC · RESMÎ İSTEMCİ</div>
+                <div class="eyebrow">MINECRAFT 26.3 · FABRIC</div>
                 <h1 class="display-title">LUM<span>SMP</span></h1>
-                <p class="display-sub">Korumalı giriş, oyun içi <strong>Sağ Shift</strong> HUD, Keystrokes, C-Zoom ve Spotify kontrolü.</p>
-
-                <!-- QUICK INTERACTIVE STATS STRIP -->
-                <div class="quick-stats">
-                  <button class="qstat" id="qstatMods" type="button">
-                    <span class="qstat-k">AKTİF MOD</span>
-                    <strong id="qstatModsVal">7 Mod</strong>
-                  </button>
-                  <button class="qstat" id="qstatRam" type="button">
-                    <span class="qstat-k">BELLEK</span>
-                    <strong id="qstatRamVal">4.0 GB</strong>
-                  </button>
-                  <button class="qstat accent-qstat" id="qstatStore" type="button">
-                    <span class="qstat-k">MAĞAZA</span>
-                    <strong>Vitrine Git →</strong>
-                  </button>
-                </div>
+                <p class="display-sub">Modlar hazır, sunucu seni bekliyor. Oyun içi menü için <strong>Sağ Shift</strong>.</p>
 
                 <!-- CLEAN FROSTED NEWS FEED -->
                 <div class="glass-panel news-box">
                   <div class="box-head">
-                    <span class="box-label">DUYURULAR &amp; YENİLİKLER</span>
-                    <button class="icon-mini" id="btnRefreshNews" title="Yenile">↻</button>
+                    <span class="box-label">Duyurular</span>
+                    <button class="icon-mini" id="btnRefreshNews" title="Yenile" aria-label="Duyuruları yenile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 3v5h-5"/></svg></button>
                   </div>
                   <div class="news-list" id="newsFeed">
                     <div class="muted">Duyurular yükleniyor…</div>
@@ -114,20 +98,20 @@
                 <div class="char-showcase" id="skinStage">
                   <img class="char-img" id="heroSkinImg" src="" alt="" hidden />
                   <div class="char-empty" id="heroSkinFallback">L</div>
-                  <div class="char-glow"></div>
+                  <div class="char-ground"></div>
                   <div class="char-nametag" id="heroNameTag">LumSMP</div>
                 </div>
 
                 <div class="glass-panel account-card">
                   <div class="acc-line">
                     <div>
-                      <div class="acc-kicker">LUMCRAFT HESABI</div>
+                      <div class="acc-kicker">LumCraft hesabı</div>
                       <div class="acc-user" id="siteUserVal">Bağlı değil</div>
                       <div class="acc-meta" id="siteStatsVal">Oyuna girmek için giriş yap</div>
                     </div>
                     <div class="row-gap">
                       <button class="btn primary sm" id="btnSiteAuth">Giriş Yap</button>
-                      <button class="btn ghost sm" id="btnSwitchAccount" title="Hesap değiştir">⇄</button>
+                      <button class="btn ghost sm" id="btnSwitchAccount" title="Hesap değiştir">Değiştir</button>
                     </div>
                   </div>
 
@@ -137,7 +121,7 @@
                     <div>
                       <div class="acc-kicker">
                         <span class="ms-squares" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-                        MİCROSOFT PREMİUM
+                        Microsoft Premium
                       </div>
                       <div class="acc-user sm-val" id="msUserVal">İsteğe bağlı</div>
                     </div>
@@ -145,7 +129,7 @@
                   </div>
 
                   <div class="prem-note" id="premiumWarnBar" hidden>
-                    <strong>Premium Koruması:</strong> Orijinal kayıtlı bir adla Microsoft bağlamadan girersen sunucu engeller. Premium değilsen alınmamış bir adla kayıt ol.
+                    Adın premium ise Microsoft bağlamadan sunucuya giremezsin.
                   </div>
                 </div>
               </div>
@@ -187,7 +171,7 @@
               <p class="muted">lumcraft.com.tr üzerindeki canlı VIP rütbeleri, Lumin paketleri ve kozmetikler.</p>
             </div>
             <div class="row-gap">
-              <button class="btn ghost" id="btnRefreshStore">↻ Yenile</button>
+              <button class="btn ghost" id="btnRefreshStore">Yenile</button>
               <button class="btn primary" id="btnOpenWebStore">Site Mağazasını Aç ↗</button>
             </div>
           </div>
@@ -228,7 +212,7 @@
           <div class="alert ok" id="shaderNotice" hidden></div>
           <div class="card-grid-2" id="shaderStore"></div>
           <div class="surface-box">
-            <div class="box-label" style="margin-bottom:8px;">YÜKLÜ SHADER PAKETLERİ</div>
+            <div class="box-label" style="margin-bottom:8px;">Yüklü shader paketleri</div>
             <div class="file-list compact" id="shaderList"></div>
           </div>
         </section>
@@ -245,7 +229,7 @@
           <div class="alert ok" id="packNotice" hidden></div>
           <div class="card-grid-2" id="packStore"></div>
           <div class="surface-box">
-            <div class="box-label" style="margin-bottom:8px;">YÜKLÜ KAYNAK PAKETLERİ</div>
+            <div class="box-label" style="margin-bottom:8px;">Yüklü kaynak paketleri</div>
             <div class="file-list compact" id="packList"></div>
           </div>
         </section>
@@ -273,14 +257,14 @@
               <h2>Ayarlar</h2>
               <p class="muted">Bellek, Java performans motoru, Discord RPC, bulut senkronizasyonu ve yedekleme.</p>
             </div>
-            <span class="ver-tag" id="settingsVerBadge">v2.6.0</span>
+            <span class="ver-tag" id="settingsVerBadge">v2.8.0</span>
           </div>
 
           <div class="settings-grid">
             <div class="surface-box set-card">
               <div class="box-head">
                 <div>
-                  <div class="box-label">BELLEK (RAM)</div>
+                  <div class="box-label">Bellek</div>
                   <div class="set-title">Minecraft RAM Ayarı</div>
                 </div>
                 <span class="gold-chip" id="ramLabel">4.0 GB</span>
@@ -303,7 +287,7 @@
             </div>
 
             <div class="surface-box set-card">
-              <div class="box-label">JAVA PERFORMANS</div>
+              <div class="box-label">Java performansı</div>
               <div class="set-title">Çöp Toplayıcı (GC) Motoru</div>
               <div class="gc-grid" id="gcCards">
                 <button class="gc-opt active" data-gc="auto" type="button"><strong>Otomatik</strong><span>Dengeli önerilen</span></button>
@@ -314,7 +298,7 @@
             </div>
 
             <div class="surface-box set-card">
-              <div class="box-label">ENTEGRASYONLAR</div>
+              <div class="box-label">Entegrasyonlar</div>
               <div class="set-title">Pencere &amp; Oyun İçi</div>
               <div class="set-row">
                 <div>
@@ -342,7 +326,7 @@
             </div>
 
             <div class="surface-box set-card">
-              <div class="box-label">GÖRÜNÜM &amp; TEMA</div>
+              <div class="box-label">Görünüm</div>
               <div class="set-title">Launcher Vurgu Rengi</div>
               <div class="theme-row" id="themePicker">
                 <button class="theme-swatch active" data-theme="gold" type="button"><i style="background:#f4c459"></i>Altın</button>
@@ -351,12 +335,12 @@
                 <button class="theme-swatch" data-theme="crimson" type="button"><i style="background:#fb7185"></i>Kızıl</button>
               </div>
               <div class="hairline"></div>
-              <div class="box-label">SİSTEM, BULUT &amp; YEDEK</div>
+              <div class="box-label">Güncelleme, bulut ve yedek</div>
               <p class="muted" id="updateStatusText">Launcher açılışta yeni sürümleri otomatik kontrol eder.</p>
               <div class="row-gap wrap">
                 <button class="btn primary sm" id="btnCheckUpdate">Güncelleme Kontrol Et</button>
-                <button class="btn ghost sm" id="btnCloudSave">☁ Buluta Kaydet</button>
-                <button class="btn ghost sm" id="btnCloudRestore">☁ Buluttan Yükle</button>
+                <button class="btn ghost sm" id="btnCloudSave">Buluta Kaydet</button>
+                <button class="btn ghost sm" id="btnCloudRestore">Buluttan Yükle</button>
               </div>
               <div class="row-gap wrap">
                 <button class="btn ghost sm" id="btnBackupProfile">Yerel Yedek Al</button>

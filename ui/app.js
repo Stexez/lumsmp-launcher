@@ -126,20 +126,31 @@ function renderStore() {
     $('storeGrid').innerHTML = '<div class="muted">Bu kategoride aktif ürün bulunamadı.</div>';
     return;
   }
-  $('storeGrid').innerHTML = list.map((p) => `
+  $('storeGrid').innerHTML = list.map((p) => {
+    // the site sends relative image paths; only its own images are loaded (see CSP)
+    const art = String(p.imageUrl || '').startsWith('/') ? `https://lumcraft.com.tr${p.imageUrl}` : '';
+    const discount = Number(p.discountPercent) || 0;
+    return `
     <div class="store-card">
-      <div class="store-card-top">
-        <div class="prod-sym">${escapeHtml(p.symbol || '★')}</div>
-        <span class="ver-tag">${escapeHtml(p.tag || STORE_CATS[p.category] || 'Ürün')}</span>
+      <div class="store-art">
+        <span class="prod-sym">${escapeHtml(p.symbol || '★')}</span>
+        ${art ? `<img src="${escapeHtml(art)}" alt="" loading="lazy" />` : ''}
+        ${discount ? `<span class="sale">%${discount} indirim</span>` : ''}
       </div>
+      <div class="store-card-kind">${escapeHtml(STORE_CATS[p.category] || p.categoryName || 'Ürün')}</div>
       <h3 class="store-card-title">${escapeHtml(p.name)}</h3>
       <p class="store-card-desc">${escapeHtml(p.description || '')}</p>
       <div class="store-card-foot">
-        <span class="store-price">${escapeHtml(p.price)} ₺</span>
-        <button class="btn primary sm" data-buy-prod="${escapeHtml(p.id)}">Satın Al ↗</button>
+        <span>
+          ${discount && p.listPriceText ? `<s class="store-old">₺${escapeHtml(p.listPriceText)}</s>` : ''}
+          <span class="store-price">₺${escapeHtml(p.priceText || p.price)}</span>
+        </span>
+        <button class="btn gold sm" data-buy-prod="${escapeHtml(p.id)}">Satın al ↗</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+  // a broken image falls back to the symbol underneath (inline handlers are blocked by the CSP)
+  $('storeGrid').querySelectorAll('.store-art img').forEach((img) => { img.onerror = () => img.remove(); });
   $('storeGrid').querySelectorAll('[data-buy-prod]').forEach((btn) => {
     btn.onclick = () => invoke('open_external_url', { url: 'https://lumcraft.com.tr/marketplace.html' });
   });
