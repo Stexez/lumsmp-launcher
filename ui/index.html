@@ -7,384 +7,351 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="shell">
-    <!-- UNIFIED TOP COMMAND BAR -->
-    <header class="topbar" data-tauri-drag-region>
-      <div class="brand" data-tauri-drag-region>
-        <img class="brand-logo" src="logo.png" alt="LumSMP" />
-        <span class="brand-lum">LUM</span><span class="brand-smp">SMP</span>
-        <span class="badge-ver" id="verBadge">v2.5.0</span>
+  <div class="app">
+    <!-- SLIM LEFT ICON RAIL (FEATHER / LUNAR / MODRINTH STYLE) -->
+    <aside class="rail">
+      <div class="rail-brand" data-tauri-drag-region>
+        <img src="logo.png" alt="LumSMP" />
       </div>
 
-      <nav class="topnav">
-        <button class="nav-pill active" data-tab="home">✦ Ana Sayfa</button>
-        <button class="nav-pill" data-tab="store">★ Mağaza</button>
-        <button class="nav-pill" data-tab="mods">❖ Modlar</button>
-        <button class="nav-pill" data-tab="shaders">☀ Shaderlar</button>
-        <button class="nav-pill" data-tab="packs">◈ Paketler</button>
-        <button class="nav-pill" data-tab="logs">▤ Loglar</button>
-        <button class="nav-pill" data-tab="settings">⚙ Ayarlar</button>
+      <nav class="rail-nav">
+        <button class="rail-btn active" data-tab="home" data-tip="Ana Sayfa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+        </button>
+        <button class="rail-btn" data-tab="store" data-tip="Mağaza">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </button>
+        <button class="rail-btn" data-tab="mods" data-tip="Modlar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+        </button>
+        <button class="rail-btn" data-tab="shaders" data-tip="Shaderlar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        </button>
+        <button class="rail-btn" data-tab="packs" data-tip="Kaynak Paketleri">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </button>
+        <button class="rail-btn" data-tab="logs" data-tip="Oyun Logu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </button>
       </nav>
 
-      <div class="top-right">
-        <button class="user-chip" id="btnAccounts" type="button" title="Hesap değiştir">
-          <img class="chip-avatar" id="sideAvatar" src="" alt="" hidden />
-          <span class="chip-fallback" id="sideAvatarFallback">L</span>
-          <span class="chip-name" id="sideName">Giriş Yap</span>
-          <span class="chip-arrow">⇄</span>
+      <div class="rail-bottom">
+        <button class="rail-btn" data-tab="settings" data-tip="Ayarlar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 0 1 0 4h-.09c-.66 0-1.25.4-1.51 1z"/></svg>
         </button>
-        <div class="win-controls">
-          <button class="win-btn" id="btnMin" title="Küçült">—</button>
-          <button class="win-btn close" id="btnClose" title="Kapat">×</button>
-        </div>
+        <button class="rail-avatar" id="btnAccounts" data-tip="Hesaplar" type="button">
+          <img id="sideAvatar" src="" alt="" hidden />
+          <span id="sideAvatarFallback">L</span>
+        </button>
       </div>
-    </header>
+    </aside>
 
-    <div class="update-ribbon" id="updateBar" hidden></div>
+    <!-- MAIN STAGE -->
+    <div class="stage">
+      <!-- FLOATING MINIMAL TITLEBAR -->
+      <header class="titlebar" data-tauri-drag-region>
+        <div class="title-left" data-tauri-drag-region>
+          <span class="wordmark">LUM<span>SMP</span></span>
+          <span class="ver-tag" id="verBadge">v2.6.0</span>
+          <span class="online-pill"><i class="dot"></i><span id="serverStatusText">Sunucu kontrol ediliyor…</span></span>
+        </div>
+        <div class="title-right">
+          <button class="top-link" id="btnOpenSite" type="button">lumcraft.com.tr ↗</button>
+          <div class="win-btns">
+            <button class="win-btn" id="btnMin" title="Küçült">—</button>
+            <button class="win-btn close" id="btnClose" title="Kapat">×</button>
+          </div>
+        </div>
+      </header>
 
-    <main class="content">
-      <!-- HOME (NEW 2-COLUMN PRO DASHBOARD) -->
-      <section class="panel active" id="tab-home">
-        <div class="home-grid">
-          <!-- LEFT COLUMN: HERO + PLAY + NEWS -->
-          <div class="home-main">
-            <div class="hero-card">
-              <div class="hero-top">
-                <div class="hero-copy">
-                  <div class="hero-badges">
-                    <span class="status-chip"><span class="pulse"></span> <span id="serverStatusText">Sunucu kontrol ediliyor…</span></span>
-                    <span class="ver-pill">MC 26.3 · Fabric</span>
+      <div class="update-ribbon" id="updateBar" hidden></div>
+
+      <main class="views">
+        <!-- HOME: FULL-BLEED CINEMATIC LAUNCHER VIEW -->
+        <section class="view active home-view" id="tab-home">
+          <div class="home-backdrop"></div>
+          <div class="home-vignette"></div>
+
+          <div class="home-inner">
+            <div class="home-body">
+              <!-- LEFT: BRANDING + NEWS FEED -->
+              <div class="home-left">
+                <div class="eyebrow">MINECRAFT 26.3 · FABRIC · RESMÎ İSTEMCİ</div>
+                <h1 class="display-title">LUM<span>SMP</span></h1>
+                <p class="display-sub">Korumalı giriş, oyun içi <strong>Sağ Shift</strong> HUD, Keystrokes, C-Zoom ve Spotify kontrolü.</p>
+
+                <!-- CLEAN FROSTED NEWS FEED -->
+                <div class="glass-panel news-box">
+                  <div class="box-head">
+                    <span class="box-label">DUYURULAR &amp; YENİLİKLER</span>
+                    <button class="icon-mini" id="btnRefreshNews" title="Yenile">↻</button>
                   </div>
-                  <h1 class="hero-title"><span class="gold-text">LUM</span> SMP</h1>
-                  <p class="hero-sub">Korumalı giriş, <strong>Sağ Shift</strong> HUD, Keystrokes, C-Zoom, özel Nişangâh ve Spotify kontrolü.</p>
-
-                  <div class="pill-row" id="profilePills">
-                    <button class="pill" data-profile="ultra_fps">⚡ Ultra FPS</button>
-                    <button class="pill active" data-profile="balanced">✦ Dengeli</button>
-                    <button class="pill" data-profile="shader">☀ Shader</button>
-                  </div>
-                </div>
-
-                <div class="skin-stage" id="skinStage" title="3D Karakter Önizleme">
-                  <img class="skin-body" id="heroSkinImg" src="" alt="Karakter" hidden />
-                  <div class="skin-placeholder" id="heroSkinFallback">L</div>
-                  <div class="skin-pedestal"></div>
-                  <div class="skin-tag" id="heroSkinTag">LumSMP</div>
-                </div>
-              </div>
-
-              <div class="launch-dock">
-                <div class="progress-wrap">
-                  <div class="progress-head">
-                    <span class="progress-label" id="progressLabel">Oyuna hazır.</span>
-                    <span class="muted" id="setupSummary">7 Mod · 4.0 GB RAM</span>
-                  </div>
-                  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-                </div>
-                <button class="btn-play" id="btnPlay">▶ OYNA</button>
-              </div>
-
-              <div class="alert error" id="homeError" hidden></div>
-              <div class="recovery-bar" id="crashRecoveryBar" hidden>
-                <span id="crashRecoveryText"></span>
-                <button class="btn primary" id="btnCrashRecover">Sorunlu Modu Kapat ve Tekrar Dene</button>
-              </div>
-            </div>
-
-            <!-- REFRESHED NEWS & CHANGELOG CARD -->
-            <div class="glass-card news-panel">
-              <div class="news-header">
-                <div class="row-gap">
-                  <span class="news-dot"></span>
-                  <div>
-                    <div class="card-kicker">SUNUCU DUYURULARI &amp; YENİLİKLER</div>
-                    <div class="news-title">lumcraft.com.tr Canlı Akış</div>
+                  <div class="news-list" id="newsFeed">
+                    <div class="muted">Duyurular yükleniyor…</div>
                   </div>
                 </div>
-                <button class="btn ghost sm" id="btnRefreshNews" title="Duyuruları yenile">↻ Yenile</button>
-              </div>
-              <div class="news-feed" id="newsFeed">
-                <div class="muted">Duyurular yükleniyor…</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- RIGHT COLUMN: ACCOUNTS + MINI STORE + QUICK LINKS -->
-          <div class="home-side">
-            <!-- UNIFIED ACCOUNT CARD -->
-            <div class="glass-card side-card">
-              <div class="card-head">
-                <span class="card-kicker">HESAPLAR &amp; GİRİŞ</span>
-                <span class="mini-badge" id="siteBadge">Gerekli</span>
               </div>
 
-              <div class="acc-row">
-                <div class="acc-info">
-                  <div class="acc-label">LumCraft Hesabı</div>
-                  <div class="acc-value" id="siteUserVal">Bağlı değil</div>
-                  <div class="acc-hint" id="siteStatsVal">Oyuna girmek için giriş yap</div>
+              <!-- RIGHT: FLOATING 3D CHARACTER + CLEAN ACCOUNT CONTROLS -->
+              <div class="home-right">
+                <div class="char-showcase" id="skinStage">
+                  <img class="char-img" id="heroSkinImg" src="" alt="" hidden />
+                  <div class="char-empty" id="heroSkinFallback">L</div>
+                  <div class="char-glow"></div>
                 </div>
-                <div class="row-gap">
-                  <button class="btn primary sm" id="btnSiteAuth">Giriş Yap</button>
-                  <button class="btn ghost sm" id="btnSwitchAccount" title="Hesap değiştir">⇄</button>
-                </div>
-              </div>
 
-              <div class="set-divider"></div>
-
-              <div class="acc-row">
-                <div class="acc-info">
-                  <div class="acc-label">
-                    <span class="ms-squares" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-                    Microsoft Premium
+                <div class="glass-panel account-card">
+                  <div class="acc-line">
+                    <div>
+                      <div class="acc-kicker">LUMCRAFT HESABI</div>
+                      <div class="acc-user" id="siteUserVal">Bağlı değil</div>
+                      <div class="acc-meta" id="siteStatsVal">Oyuna girmek için giriş yap</div>
+                    </div>
+                    <div class="row-gap">
+                      <button class="btn primary sm" id="btnSiteAuth">Giriş Yap</button>
+                      <button class="btn ghost sm" id="btnSwitchAccount" title="Hesap değiştir">⇄</button>
+                    </div>
                   </div>
-                  <div class="acc-value" id="msUserVal">İsteğe bağlı</div>
-                  <div class="acc-hint" id="msSubVal">Premium skin &amp; hesap doğrulaması</div>
+
+                  <div class="hairline"></div>
+
+                  <div class="acc-line">
+                    <div>
+                      <div class="acc-kicker">
+                        <span class="ms-squares" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                        MİCROSOFT PREMİUM
+                      </div>
+                      <div class="acc-user sm-val" id="msUserVal">İsteğe bağlı</div>
+                    </div>
+                    <button class="btn ghost sm" id="btnMsAuth">Bağla</button>
+                  </div>
+
+                  <div class="prem-note" id="premiumWarnBar" hidden>
+                    <strong>Premium Koruması:</strong> Orijinal kayıtlı bir adla Microsoft bağlamadan girersen sunucu engeller. Premium değilsen alınmamış bir adla kayıt ol.
+                  </div>
                 </div>
-                <button class="btn ghost sm" id="btnMsAuth">Bağla</button>
-              </div>
-
-              <div class="warn-notice" id="premiumWarnBar" hidden>
-                <strong>⚠ Premium Koruması:</strong> Premium kayıtlı bir adla Microsoft bağlamadan girersen sunucu koruması engeller. Premium değilsen alınmamış bir adla kayıt ol.
               </div>
             </div>
 
-            <!-- MINI STORE PREVIEW CARD -->
-            <div class="glass-card side-card store-preview-card">
-              <div class="card-head">
-                <span class="card-kicker">★ LUMSMP MAĞAZA VİTRİNİ</span>
-                <button class="link-btn" id="btnGotoStore">Tümünü Gör →</button>
+            <!-- ALERTS ABOVE DOCK -->
+            <div class="alert error" id="homeError" hidden></div>
+            <div class="recovery-bar" id="crashRecoveryBar" hidden>
+              <span id="crashRecoveryText"></span>
+              <button class="btn primary sm" id="btnCrashRecover">Sorunlu Modu Kapat ve Tekrar Dene</button>
+            </div>
+
+            <!-- SIGNATURE FLOATING LAUNCH BAR (LUNAR / FEATHER STYLE) -->
+            <div class="play-bar">
+              <div class="play-left">
+                <div class="seg" id="profilePills">
+                  <button class="seg-btn" data-profile="ultra_fps">Ultra FPS</button>
+                  <button class="seg-btn active" data-profile="balanced">Dengeli</button>
+                  <button class="seg-btn" data-profile="shader">Shader</button>
+                </div>
+                <span class="play-spec" id="setupSummary">7 Mod · 4.0 GB RAM</span>
               </div>
-              <div class="mini-store-list" id="miniStoreList">
-                <div class="muted">Mağaza ürünleri yükleniyor…</div>
+
+              <div class="play-progress">
+                <div class="prog-text" id="progressLabel">Oyuna hazır</div>
+                <div class="prog-track"><div class="prog-fill" id="progressFill"></div></div>
+              </div>
+
+              <button class="play-cta" id="btnPlay">OYNA</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- STORE TAB -->
+        <section class="view page-view" id="tab-store">
+          <div class="page-head">
+            <div>
+              <h2>LumSMP Mağaza</h2>
+              <p class="muted">lumcraft.com.tr üzerindeki canlı VIP rütbeleri, Lumin paketleri ve kozmetikler.</p>
+            </div>
+            <div class="row-gap">
+              <button class="btn ghost" id="btnRefreshStore">↻ Yenile</button>
+              <button class="btn primary" id="btnOpenWebStore">Site Mağazasını Aç ↗</button>
+            </div>
+          </div>
+          <div class="filter-bar" id="storeCats"></div>
+          <div class="store-grid" id="storeGrid"><div class="muted">Ürünler yükleniyor…</div></div>
+        </section>
+
+        <!-- MODS TAB -->
+        <section class="view page-view" id="tab-mods">
+          <div class="page-head">
+            <div>
+              <h2>İzinli İstemci Modları</h2>
+              <p class="muted">Zorunlu sunucu modları (LumPhone, VoiceChat, LumSMP Client) otomatik kurulur.</p>
+            </div>
+            <input class="search" id="modSearch" type="text" placeholder="Mod ara…" />
+          </div>
+          <div class="toolbar-row">
+            <div class="filter-bar" id="modCats"></div>
+            <div class="row-gap">
+              <button class="btn ghost sm" id="presetFps">Ultra FPS</button>
+              <button class="btn ghost sm" id="presetVanilla">Vanilla+</button>
+              <button class="btn ghost sm" id="presetShader">Shader</button>
+              <button class="btn ghost sm" id="presetReset">Varsayılan</button>
+            </div>
+          </div>
+          <div class="card-grid-2" id="modGrid"></div>
+        </section>
+
+        <!-- SHADERS TAB -->
+        <section class="view page-view" id="tab-shaders">
+          <div class="page-head">
+            <div>
+              <h2>Shader Mağazası</h2>
+              <p class="muted">Modrinth üzerinden tek tıkla indir — kullanmak için Modlar sekmesinden Iris Shaders'ı aç.</p>
+            </div>
+            <button class="btn ghost" id="btnOpenShaders">Shader Klasörü</button>
+          </div>
+          <div class="alert ok" id="shaderNotice" hidden></div>
+          <div class="card-grid-2" id="shaderStore"></div>
+          <div class="surface-box">
+            <div class="box-label" style="margin-bottom:8px;">YÜKLÜ SHADER PAKETLERİ</div>
+            <div class="file-list compact" id="shaderList"></div>
+          </div>
+        </section>
+
+        <!-- RESOURCE PACKS TAB -->
+        <section class="view page-view" id="tab-packs">
+          <div class="page-head">
+            <div>
+              <h2>Kaynak Paketleri</h2>
+              <p class="muted">Tek tıkla indir, oyunda Kaynak Paketleri menüsünden etkinleştir.</p>
+            </div>
+            <button class="btn ghost" id="btnOpenPacks">Paket Klasörü</button>
+          </div>
+          <div class="alert ok" id="packNotice" hidden></div>
+          <div class="card-grid-2" id="packStore"></div>
+          <div class="surface-box">
+            <div class="box-label" style="margin-bottom:8px;">YÜKLÜ KAYNAK PAKETLERİ</div>
+            <div class="file-list compact" id="packList"></div>
+          </div>
+        </section>
+
+        <!-- LOGS TAB -->
+        <section class="view page-view" id="tab-logs">
+          <div class="page-head">
+            <div>
+              <h2>Oyun Log Konsolu</h2>
+              <p class="muted">Canlı Minecraft çıktısı ve hata teşhisi.</p>
+            </div>
+            <div class="row-gap">
+              <button class="btn ghost" id="btnRefreshLogs">Yenile</button>
+              <button class="btn primary" id="btnCopyLogs">Logu Kopyala</button>
+            </div>
+          </div>
+          <pre class="log-box" id="logBox">Yükleniyor…</pre>
+        </section>
+
+        <!-- SETTINGS TAB -->
+        <section class="view page-view" id="tab-settings">
+          <div class="page-head">
+            <div>
+              <h2>Ayarlar</h2>
+              <p class="muted">Bellek, Java performans motoru, Discord RPC, bulut senkronizasyonu ve yedekleme.</p>
+            </div>
+            <span class="ver-tag" id="settingsVerBadge">v2.6.0</span>
+          </div>
+
+          <div class="settings-grid">
+            <div class="surface-box set-card">
+              <div class="box-head">
+                <div>
+                  <div class="box-label">BELLEK (RAM)</div>
+                  <div class="set-title">Minecraft RAM Ayarı</div>
+                </div>
+                <span class="gold-chip" id="ramLabel">4.0 GB</span>
+              </div>
+              <div class="set-row">
+                <div>
+                  <div class="set-name">Otomatik RAM Yönetimi</div>
+                  <div class="muted">Sistemine göre en akıcı miktarı belirler.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="setRamAuto" /><span></span></label>
+              </div>
+              <div class="ram-wrap" id="ramManualRow">
+                <input type="range" class="range" id="setRamRange" min="2048" max="16384" step="512" value="4096" />
+                <div class="ram-marks">
+                  <span>2 GB</span>
+                  <span id="ramRecMark">Önerilen</span>
+                  <span id="ramMaxMark">16 GB</span>
+                </div>
               </div>
             </div>
 
-            <!-- QUICK TOOLS ROW -->
-            <div class="quick-bar">
-              <button class="btn ghost sm" id="btnOpenGameDir">📁 Oyun Klasörü</button>
-              <button class="btn ghost sm" id="btnOpenSite">🌐 Siteyi Aç ↗</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- STORE TAB (LIVE LUMCRAFT MARKETPLACE) -->
-      <section class="panel" id="tab-store">
-        <div class="panel-head">
-          <div>
-            <h2>LumSMP Mağaza</h2>
-            <p class="muted">lumcraft.com.tr üzerindeki canlı VIP rütbeleri, Lumin paketleri ve kozmetikler.</p>
-          </div>
-          <div class="row-gap">
-            <button class="btn ghost" id="btnRefreshStore">↻ Yenile</button>
-            <button class="btn primary" id="btnOpenWebStore">Tarayıcıda Mağazayı Aç ↗</button>
-          </div>
-        </div>
-        <div class="cat-bar" id="storeCats"></div>
-        <div class="store-grid" id="storeGrid">
-          <div class="muted">Ürünler yükleniyor…</div>
-        </div>
-      </section>
-
-      <!-- MODS -->
-      <section class="panel" id="tab-mods">
-        <div class="panel-head">
-          <div>
-            <h2>İzinli İstemci Modları</h2>
-            <p class="muted">Zorunlu modlar (LumPhone, VoiceChat, LumSMP Client) otomatik kurulur.</p>
-          </div>
-          <input class="search" id="modSearch" type="text" placeholder="Mod ara…" />
-        </div>
-        <div class="preset-bar">
-          <span class="muted">Hızlı Paketler:</span>
-          <button class="btn ghost sm" id="presetFps">⚡ Ultra FPS</button>
-          <button class="btn ghost sm" id="presetVanilla">✦ Vanilla+</button>
-          <button class="btn ghost sm" id="presetShader">☀ Shader Hazır</button>
-          <button class="btn ghost sm" id="presetReset">↺ Varsayılan</button>
-        </div>
-        <div class="cat-bar" id="modCats"></div>
-        <div class="mod-grid" id="modGrid"></div>
-      </section>
-
-      <!-- SHADERS -->
-      <section class="panel" id="tab-shaders">
-        <div class="panel-head">
-          <div>
-            <h2>Shader Mağazası (Modrinth)</h2>
-            <p class="muted">Tek tıkla indir — kullanmak için Modlar sekmesinden Iris Shaders'ı aç.</p>
-          </div>
-          <button class="btn ghost" id="btnOpenShaders">Shader Klasörü</button>
-        </div>
-        <div class="alert ok" id="shaderNotice" hidden></div>
-        <div class="mod-grid" id="shaderStore"></div>
-        <div class="glass-card" style="margin-top:auto">
-          <div class="card-kicker">YÜKLÜ SHADER PAKETLERİ</div>
-          <div class="file-list compact" id="shaderList"></div>
-        </div>
-      </section>
-
-      <!-- RESOURCE PACKS -->
-      <section class="panel" id="tab-packs">
-        <div class="panel-head">
-          <div>
-            <h2>Kaynak Paketleri (Modrinth)</h2>
-            <p class="muted">Tek tıkla indir, oyunda Kaynak Paketleri menüsünden etkinleştir.</p>
-          </div>
-          <button class="btn ghost" id="btnOpenPacks">Paket Klasörü</button>
-        </div>
-        <div class="alert ok" id="packNotice" hidden></div>
-        <div class="mod-grid" id="packStore"></div>
-        <div class="glass-card" style="margin-top:auto">
-          <div class="card-kicker">YÜKLÜ KAYNAK PAKETLERİ</div>
-          <div class="file-list compact" id="packList"></div>
-        </div>
-      </section>
-
-      <!-- LOGS -->
-      <section class="panel" id="tab-logs">
-        <div class="panel-head">
-          <div>
-            <h2>Canlı Oyun Log Konsolu</h2>
-            <p class="muted">Oyun çıktısı ve hata teşhisi.</p>
-          </div>
-          <div class="row-gap">
-            <button class="btn ghost" id="btnRefreshLogs">Yenile</button>
-            <button class="btn primary" id="btnCopyLogs">Logu Kopyala</button>
-          </div>
-        </div>
-        <pre class="log-box" id="logBox">Yükleniyor…</pre>
-      </section>
-
-      <!-- SETTINGS -->
-      <section class="panel" id="tab-settings">
-        <div class="panel-head">
-          <div>
-            <h2>Ayarlar</h2>
-            <p class="muted">Bellek, Java performans motoru, Discord RPC, bulut senkronizasyon ve güncellemeler.</p>
-          </div>
-          <span class="badge-ver" id="settingsVerBadge">v2.5.0</span>
-        </div>
-
-        <div class="settings-grid">
-          <div class="glass-card set-card">
-            <div class="set-card-head">
-              <div>
-                <div class="card-kicker">BELLEK (RAM)</div>
-                <div class="set-card-title">Minecraft RAM Ayarı</div>
+            <div class="surface-box set-card">
+              <div class="box-label">JAVA PERFORMANS</div>
+              <div class="set-title">Çöp Toplayıcı (GC) Motoru</div>
+              <div class="gc-grid" id="gcCards">
+                <button class="gc-opt active" data-gc="auto" type="button"><strong>Otomatik</strong><span>Dengeli önerilen</span></button>
+                <button class="gc-opt" data-gc="g1" type="button"><strong>G1GC</strong><span>4-8 GB stabil</span></button>
+                <button class="gc-opt" data-gc="zgc" type="button"><strong>ZGC</strong><span>8+ GB düşük gecikme</span></button>
               </div>
-              <span class="ram-chip" id="ramLabel">4.0 GB</span>
+              <select id="setPerfMode" hidden><option value="auto">auto</option><option value="g1">g1</option><option value="zgc">zgc</option></select>
             </div>
-            <div class="set-row-inline">
-              <div>
-                <div class="setting-title">Otomatik RAM Yönetimi</div>
-                <div class="muted">Bilgisayarının belleğine göre en akıcı değeri seçer.</div>
+
+            <div class="surface-box set-card">
+              <div class="box-label">ENTEGRASYONLAR</div>
+              <div class="set-title">Pencere &amp; Oyun İçi</div>
+              <div class="set-row">
+                <div>
+                  <div class="set-name">Discord Rich Presence</div>
+                  <div class="muted">Discord profilinde canlı LumSMP durumunu gösterir.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="setDiscordRpc" /><span></span></label>
               </div>
-              <label class="switch"><input type="checkbox" id="setRamAuto" /><span></span></label>
+              <div class="hairline"></div>
+              <div class="set-row">
+                <div>
+                  <div class="set-name">Oyun Açılınca Küçült</div>
+                  <div class="muted">Minecraft başladığında launcher arka plana alınır.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="setMinLaunch" /><span></span></label>
+              </div>
+              <div class="hairline"></div>
+              <div class="set-row">
+                <div>
+                  <div class="set-name">Oyun İçi HUD, Crosshair &amp; Spotify</div>
+                  <div class="muted">Oyun içinde <strong>Sağ Shift</strong> menüsü ve <strong>C</strong> Zoom aktif.</div>
+                </div>
+                <span class="green-chip">Sağ Shift</span>
+              </div>
             </div>
-            <div class="ram-slider-box" id="ramManualRow">
-              <input type="range" class="range" id="setRamRange" min="2048" max="16384" step="512" value="4096" />
-              <div class="ram-marks">
-                <span>2 GB</span>
-                <span id="ramRecMark">Önerilen</span>
-                <span id="ramMaxMark">16 GB</span>
+
+            <div class="surface-box set-card">
+              <div class="box-label">SİSTEM, BULUT &amp; YEDEK</div>
+              <div class="set-title">Senkronizasyon &amp; Güncelleme</div>
+              <p class="muted" id="updateStatusText">Launcher açılışta yeni sürümleri otomatik kontrol eder.</p>
+              <div class="row-gap wrap">
+                <button class="btn primary sm" id="btnCheckUpdate">Güncelleme Kontrol Et</button>
+                <button class="btn ghost sm" id="btnCloudSave">☁ Buluta Kaydet</button>
+                <button class="btn ghost sm" id="btnCloudRestore">☁ Buluttan Yükle</button>
+              </div>
+              <div class="row-gap wrap">
+                <button class="btn ghost sm" id="btnBackupProfile">Yerel Yedek Al</button>
+                <button class="btn ghost sm" id="btnSetOpenGame">Oyun Klasörü</button>
+                <button class="btn ghost sm" id="btnSetOpenMods">Modlar</button>
+                <button class="btn ghost sm" id="btnSetOpenBackups">Yedekler</button>
               </div>
             </div>
           </div>
-
-          <div class="glass-card set-card">
-            <div class="set-card-head">
-              <div>
-                <div class="card-kicker">JAVA PERFORMANS</div>
-                <div class="set-card-title">Çöp Toplayıcı (GC) Motoru</div>
-              </div>
-            </div>
-            <div class="gc-grid" id="gcCards">
-              <button class="gc-option active" data-gc="auto" type="button">
-                <strong>Otomatik</strong>
-                <span>Önerilen dengeli ayar</span>
-              </button>
-              <button class="gc-option" data-gc="g1" type="button">
-                <strong>G1GC</strong>
-                <span>4-8 GB RAM için stabil</span>
-              </button>
-              <button class="gc-option" data-gc="zgc" type="button">
-                <strong>ZGC</strong>
-                <span>8+ GB · Sıfır takılma</span>
-              </button>
-            </div>
-            <select id="setPerfMode" hidden>
-              <option value="auto">Otomatik</option>
-              <option value="g1">G1GC</option>
-              <option value="zgc">ZGC</option>
-            </select>
-          </div>
-
-          <div class="glass-card set-card">
-            <div class="set-card-head">
-              <div>
-                <div class="card-kicker">ENTEGRASYONLAR</div>
-                <div class="set-card-title">Pencere &amp; Oyun İçi Özellikler</div>
-              </div>
-            </div>
-            <div class="set-row-inline">
-              <div>
-                <div class="setting-title">Discord Rich Presence</div>
-                <div class="muted">Discord profilinde canlı LumSMP durumunu gösterir.</div>
-              </div>
-              <label class="switch"><input type="checkbox" id="setDiscordRpc" /><span></span></label>
-            </div>
-            <div class="set-divider"></div>
-            <div class="set-row-inline">
-              <div>
-                <div class="setting-title">Oyun Açılınca Küçült</div>
-                <div class="muted">Minecraft başladığında launcher simge durumuna iner.</div>
-              </div>
-              <label class="switch"><input type="checkbox" id="setMinLaunch" /><span></span></label>
-            </div>
-            <div class="set-divider"></div>
-            <div class="set-row-inline">
-              <div>
-                <div class="setting-title">Oyun İçi HUD, Crosshair &amp; Spotify</div>
-                <div class="muted">Oyun içinde <strong>Sağ Shift</strong> ile menüyü aç, <strong>C</strong> ile Zoom yap.</div>
-              </div>
-              <span class="mini-badge green-badge">Aktif</span>
-            </div>
-          </div>
-
-          <div class="glass-card set-card">
-            <div class="set-card-head">
-              <div>
-                <div class="card-kicker">BULUT, YEDEK &amp; GÜNCELLEME</div>
-                <div class="set-card-title">Senkronizasyon &amp; Sistem</div>
-              </div>
-            </div>
-            <p class="muted" id="updateStatusText">Launcher açılışta yeni sürümleri otomatik kontrol eder.</p>
-            <div class="row-gap" style="flex-wrap:wrap;">
-              <button class="btn primary sm" id="btnCheckUpdate">Güncelleme Kontrol Et</button>
-              <button class="btn ghost sm" id="btnCloudSave">☁ Buluta Kaydet</button>
-              <button class="btn ghost sm" id="btnCloudRestore">☁ Buluttan Yükle</button>
-            </div>
-            <div class="row-gap" style="flex-wrap:wrap;">
-              <button class="btn ghost sm" id="btnBackupProfile">Yerel Yedek Al</button>
-              <button class="btn ghost sm" id="btnSetOpenGame">Oyun</button>
-              <button class="btn ghost sm" id="btnSetOpenMods">Modlar</button>
-              <button class="btn ghost sm" id="btnSetOpenBackups">Yedekler</button>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </div>
   </div>
 
-  <!-- Site Login Modal -->
+  <!-- LOGIN MODAL -->
   <div class="modal-backdrop" id="loginModal" hidden>
     <div class="modal">
-      <div class="modal-brand">
-        <img class="brand-logo" src="logo.png" alt="LumSMP" />
+      <div class="modal-head">
+        <img src="logo.png" alt="LumSMP" />
         <h3>lumcraft.com.tr Girişi</h3>
       </div>
-      <p class="muted">Sitede kayıtlı <strong>Minecraft kullanıcı adın</strong> ve parolanla giriş yap.<br/><span style="color:var(--gold)">Not:</span> Premium bir adın varsa Microsoft bağlaman gerekir; değilsen alınmamış bir adla kayıt ol.</p>
+      <p class="muted">Sitede kayıtlı <strong>Minecraft kullanıcı adın</strong> ve parolanla giriş yap.<br/><span class="gold-txt">Not:</span> Premium bir adın varsa Microsoft bağlaman gerekir; değilsen alınmamış bir adla kayıt ol.</p>
       <input class="field" id="loginUser" type="text" placeholder="Minecraft kullanıcı adın (3-16 karakter)" autocomplete="username" />
       <input class="field" id="loginPass" type="password" placeholder="Parola" autocomplete="current-password" />
       <div class="alert error" id="loginErr" hidden></div>
@@ -395,14 +362,14 @@
     </div>
   </div>
 
-  <!-- Account Switcher Modal -->
+  <!-- ACCOUNTS MODAL -->
   <div class="modal-backdrop" id="accountsModal" hidden>
     <div class="modal">
-      <div class="modal-brand">
-        <img class="brand-logo" src="logo.png" alt="LumSMP" />
+      <div class="modal-head">
+        <img src="logo.png" alt="LumSMP" />
         <h3>Kayıtlı Hesaplar</h3>
       </div>
-      <p class="muted">Tek tıkla hesap değiştir veya yeni LumSMP hesabı ekle.</p>
+      <p class="muted">Tek tıkla hesap değiştir veya yeni hesap ekle.</p>
       <div class="file-list compact" id="accountsList"></div>
       <div class="modal-actions">
         <button class="btn ghost" id="btnAccountsClose" type="button">Kapat</button>

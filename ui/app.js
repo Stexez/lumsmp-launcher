@@ -64,8 +64,8 @@ function showError(msg) {
 }
 
 function switchTab(tabId) {
-  document.querySelectorAll('.nav-pill').forEach((b) => b.classList.toggle('active', b.dataset.tab === tabId));
-  document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+  document.querySelectorAll('.rail-btn[data-tab]').forEach((b) => b.classList.toggle('active', b.dataset.tab === tabId));
+  document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
   const target = $(`tab-${tabId}`);
   if (target) target.classList.add('active');
   if (tabId === 'store') renderStore();
@@ -79,9 +79,9 @@ function renderNews(rawText) {
   const text = (rawText || '').trim();
   if (!text) {
     feed.innerHTML = `
-      <div class="news-item highlight">✦ <strong>LumSMP 26.3</strong> — Oyun içi <strong>Sağ Shift</strong> menüsüyle HUD, Keystrokes, Crosshair, C-Zoom ve Spotify kontrolü aktif.</div>
-      <div class="news-item">★ <strong>Canlı Mağaza</strong> — Üst menüdeki <strong>Mağaza</strong> sekmesinden VIP rütbeleri ve Lumin paketlerini inceleyebilirsin.</div>
-      <div class="news-item">☁ <strong>Bulut Senkronizasyon</strong> — Ayarlar sekmesinden mod ve HUD konumlarını hesabına yedekleyebilirsin.</div>
+      <div class="news-item highlight"><strong>LumSMP 26.3</strong> — Oyun içi <strong>Sağ Shift</strong> menüsüyle HUD, Keystrokes, Crosshair, C-Zoom ve Spotify kontrolü aktif.</div>
+      <div class="news-item"><strong>Canlı Mağaza</strong> — Sol menüdeki Mağaza sekmesinden VIP rütbeleri ve Lumin paketlerini inceleyebilirsin.</div>
+      <div class="news-item"><strong>Bulut Senkronizasyon</strong> — Ayarlar sekmesinden mod ve HUD konumlarını hesabına yedekleyebilirsin.</div>
     `;
     return;
   }
@@ -89,29 +89,6 @@ function renderNews(rawText) {
   feed.innerHTML = lines.map((line, i) => `
     <div class="news-item ${i === 0 ? 'highlight' : ''}">${escapeHtml(line)}</div>
   `).join('');
-}
-
-function renderMiniStore() {
-  const box = $('miniStoreList');
-  if (!state.products.length) {
-    box.innerHTML = '<div class="muted">Mağaza ürünlerine şu an ulaşılamadı.</div>';
-    return;
-  }
-  box.innerHTML = state.products.slice(0, 3).map((p) => `
-    <div class="mini-prod" data-open-store="1">
-      <div class="mini-prod-left">
-        <div class="prod-sym">${escapeHtml(p.symbol || '★')}</div>
-        <div style="min-width:0">
-          <div class="mini-prod-name">${escapeHtml(p.name)}</div>
-          <div class="mini-prod-tag">${escapeHtml(p.tag || STORE_CATS[p.category] || 'LumSMP')}</div>
-        </div>
-      </div>
-      <span class="price-pill">${escapeHtml(p.price)} ₺</span>
-    </div>
-  `).join('');
-  box.querySelectorAll('[data-open-store]').forEach((el) => {
-    el.onclick = () => switchTab('store');
-  });
 }
 
 function renderStore() {
@@ -132,7 +109,7 @@ function renderStore() {
     <div class="store-card">
       <div class="store-card-top">
         <div class="prod-sym">${escapeHtml(p.symbol || '★')}</div>
-        <span class="mini-badge">${escapeHtml(p.tag || STORE_CATS[p.category] || 'Ürün')}</span>
+        <span class="ver-tag">${escapeHtml(p.tag || STORE_CATS[p.category] || 'Ürün')}</span>
       </div>
       <h3 class="store-card-title">${escapeHtml(p.name)}</h3>
       <p class="store-card-desc">${escapeHtml(p.description || '')}</p>
@@ -151,7 +128,7 @@ function render() {
   const d = state.data;
   if (!d) return;
   $('verBadge').textContent = `v${d.version}`;
-  if ($('settingsVerBadge')) $('settingsVerBadge').textContent = `v${d.version}`;
+  $('settingsVerBadge').textContent = `v${d.version}`;
 
   renderNews(d.announcement);
 
@@ -166,46 +143,36 @@ function render() {
     : 'Oyuna girmek için lumcraft.com.tr ile giriş yap';
   $('btnSiteAuth').textContent = siteName ? 'Çıkış' : 'Giriş Yap';
   $('btnSiteAuth').className = siteName ? 'btn ghost sm' : 'btn primary sm';
-  if ($('siteBadge')) {
-    $('siteBadge').textContent = siteName ? 'Bağlı ✓' : 'Gerekli';
-    $('siteBadge').className = siteName ? 'mini-badge green-badge' : 'mini-badge';
-  }
 
   if (mcName) {
-    $('msUserVal').textContent = mcName;
-    $('msSubVal').textContent = 'Premium oturum & skin aktif ✓';
+    $('msUserVal').textContent = `${mcName} ✓`;
     $('btnMsAuth').textContent = 'Kes';
     $('btnMsAuth').disabled = false;
   } else if (d.msConfigured) {
     $('msUserVal').textContent = 'İsteğe bağlı';
-    $('msSubVal').textContent = 'Premium hesabın varsa bağla';
     $('btnMsAuth').textContent = 'Bağla';
     $('btnMsAuth').disabled = false;
   } else {
     $('msUserVal').textContent = siteName ? `${siteName} (Site)` : 'İsteğe bağlı';
-    $('msSubVal').textContent = 'Site hesabıyla oynanabilir';
     $('btnMsAuth').textContent = 'Gerekmiyor';
     $('btnMsAuth').disabled = true;
   }
 
-  if ($('premiumWarnBar')) $('premiumWarnBar').hidden = Boolean(mcName);
+  $('premiumWarnBar').hidden = Boolean(mcName);
 
   const displayName = mcName || siteName;
-  $('sideName').textContent = displayName || 'Giriş Yap';
   if (displayName) {
     $('sideAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(displayName)}/64`;
     $('sideAvatar').hidden = false;
     $('sideAvatarFallback').hidden = true;
-    $('heroSkinImg').src = `https://mc-heads.net/body/${encodeURIComponent(displayName)}/150`;
+    $('heroSkinImg').src = `https://mc-heads.net/body/${encodeURIComponent(displayName)}/200`;
     $('heroSkinImg').hidden = false;
     $('heroSkinFallback').hidden = true;
-    $('heroSkinTag').textContent = displayName;
   } else {
     $('sideAvatar').hidden = true;
     $('sideAvatarFallback').hidden = false;
     $('heroSkinImg').hidden = true;
     $('heroSkinFallback').hidden = false;
-    $('heroSkinTag').textContent = 'LumSMP';
   }
 
   const s = d.settings;
@@ -219,18 +186,18 @@ function render() {
   $('ramManualRow').style.opacity = s.ramAuto ? '0.42' : '1';
   $('setRamRange').disabled = s.ramAuto;
   $('setPerfMode').value = s.perfMode;
-  document.querySelectorAll('#gcCards .gc-option').forEach((b) => {
+  document.querySelectorAll('#gcCards .gc-opt').forEach((b) => {
     b.classList.toggle('active', b.dataset.gc === s.perfMode);
   });
   $('setDiscordRpc').checked = s.discordRpc !== false;
   $('setMinLaunch').checked = s.minimizeOnLaunch;
 
-  document.querySelectorAll('#profilePills .pill').forEach((btn) => {
+  document.querySelectorAll('#profilePills .seg-btn').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.profile === s.profile);
   });
 
   $('btnPlay').disabled = d.playing || !siteName;
-  $('btnPlay').textContent = d.playing ? 'OYUN AÇIK' : (siteName ? '▶ OYNA' : 'GİRİŞ YAP');
+  $('btnPlay').textContent = d.playing ? 'OYUN AÇIK' : (siteName ? 'OYNA' : 'GİRİŞ YAP');
 
   renderMods();
 }
@@ -285,7 +252,7 @@ async function renderShaders() {
   $('shaderStore').innerHTML = state.shaderCatalog.map((s) => `
     <div class="mod-card">
       <div>
-        <div class="mod-title">${escapeHtml(s.name)} <span class="mini-badge">${escapeHtml(s.tier)}</span></div>
+        <div class="mod-title">${escapeHtml(s.name)} <span class="ver-tag">${escapeHtml(s.tier)}</span></div>
         <div class="mod-desc">${escapeHtml(s.desc)}</div>
       </div>
       <button class="btn primary sm" data-install-shader="${escapeHtml(s.slug)}">İndir</button>
@@ -332,7 +299,7 @@ async function renderPacks() {
   $('packStore').innerHTML = state.packCatalog.map((s) => `
     <div class="mod-card">
       <div>
-        <div class="mod-title">${escapeHtml(s.name)} <span class="mini-badge">${escapeHtml(s.tier)}</span></div>
+        <div class="mod-title">${escapeHtml(s.name)} <span class="ver-tag">${escapeHtml(s.tier)}</span></div>
         <div class="mod-desc">${escapeHtml(s.desc)}</div>
       </div>
       <button class="btn primary sm" data-install-pack="${escapeHtml(s.slug)}">İndir</button>
@@ -382,7 +349,7 @@ function renderAccountsModal() {
     ? list.map((u) => {
         const isAct = active && u.toLowerCase() === active.toLowerCase();
         return `<div class="file-row">
-          <span><strong>${escapeHtml(u)}</strong> ${isAct ? '<span class="mini-badge green-badge">Aktif</span>' : ''}</span>
+          <span><strong>${escapeHtml(u)}</strong> ${isAct ? '<span class="green-chip">Aktif</span>' : ''}</span>
           <div class="row-gap">
             ${isAct ? '' : `<button class="btn primary sm" data-switch-acc="${escapeHtml(u)}">Geç</button>`}
             <button class="btn ghost sm" data-rem-acc="${escapeHtml(u)}">Sil</button>
@@ -432,9 +399,9 @@ async function refreshStatus() {
     const max = typeof st?.max === 'number' ? st.max : (st?.players?.max ?? 100);
     $('serverStatusText').textContent = st?.online === false
       ? 'Sunucu bakımda'
-      : `Çevrimiçi · ${online} / ${max} Oyuncu`;
+      : `${online} / ${max} Çevrimiçi`;
   } catch {
-    $('serverStatusText').textContent = 'LumSMP · Bağlantı bekleniyor';
+    $('serverStatusText').textContent = 'Bağlantı bekleniyor';
   }
 }
 
@@ -445,7 +412,6 @@ async function loadStoreProducts() {
   } catch {
     state.products = [];
   }
-  renderMiniStore();
   if ($('tab-store').classList.contains('active')) renderStore();
 }
 
@@ -453,11 +419,10 @@ async function init() {
   $('btnMin').onclick = () => appWindow.minimize();
   $('btnClose').onclick = () => appWindow.close();
 
-  document.querySelectorAll('.nav-pill').forEach((btn) => {
+  document.querySelectorAll('.rail-btn[data-tab]').forEach((btn) => {
     btn.onclick = () => switchTab(btn.dataset.tab);
   });
 
-  $('btnGotoStore').onclick = () => switchTab('store');
   $('btnOpenSite').onclick = () => invoke('open_external_url', { url: 'https://lumcraft.com.tr' });
   $('btnOpenWebStore').onclick = () => invoke('open_external_url', { url: 'https://lumcraft.com.tr/marketplace.html' });
   $('btnRefreshStore').onclick = loadStoreProducts;
@@ -474,7 +439,7 @@ async function init() {
     }
   };
 
-  document.querySelectorAll('#profilePills .pill').forEach((btn) => {
+  document.querySelectorAll('#profilePills .seg-btn').forEach((btn) => {
     btn.onclick = () => updateSettings({ profile: btn.dataset.profile });
   });
 
@@ -491,13 +456,12 @@ async function init() {
   };
   $('setRamRange').onchange = (e) => updateSettings({ ramMb: Number(e.target.value) });
   $('setPerfMode').onchange = (e) => updateSettings({ perfMode: e.target.value });
-  document.querySelectorAll('#gcCards .gc-option').forEach((b) => {
+  document.querySelectorAll('#gcCards .gc-opt').forEach((b) => {
     b.onclick = () => updateSettings({ perfMode: b.dataset.gc });
   });
   $('setDiscordRpc').onchange = (e) => updateSettings({ discordRpc: e.target.checked });
   $('setMinLaunch').onchange = (e) => updateSettings({ minimizeOnLaunch: e.target.checked });
 
-  $('btnOpenGameDir').onclick = () => invoke('open_folder', { sub: '' });
   $('btnSetOpenGame').onclick = () => invoke('open_folder', { sub: '' });
   $('btnSetOpenMods').onclick = () => invoke('open_folder', { sub: 'mods' });
   $('btnSetOpenBackups').onclick = () => invoke('open_folder', { sub: 'lumsmp-backups' });
@@ -540,7 +504,7 @@ async function init() {
     btn.textContent = 'Kaydediliyor…';
     try {
       await invoke('cloud_backup_settings');
-      $('updateStatusText').textContent = '✓ Mod, RAM ve oyun içi HUD ayarların lumcraft.com.tr bulutuna kaydedildi!';
+      $('updateStatusText').textContent = '✓ Mod, RAM ve oyun içi HUD ayarların buluta kaydedildi!';
     } catch (e) {
       $('updateStatusText').textContent = `Bulut hatası: ${e}`;
     } finally {
@@ -571,7 +535,7 @@ async function init() {
   if (stage && skinImg) {
     stage.addEventListener('mousemove', (e) => {
       const r = stage.getBoundingClientRect();
-      const nx = ((e.clientX - r.left) / r.width - 0.5) * 26;
+      const nx = ((e.clientX - r.left) / r.width - 0.5) * 28;
       const ny = ((e.clientY - r.top) / r.height - 0.5) * -14;
       skinImg.style.transform = `rotateY(${nx}deg) rotateX(${ny}deg) scale(1.04)`;
     });
