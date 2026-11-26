@@ -126,6 +126,10 @@ impl SiteClient {
             .filter(|s| !s.is_empty())
     }
 
+    pub async fn products(&self) -> Result<Value, String> {
+        self.call("/api/products", "GET", None, None).await
+    }
+
     pub async fn cloud_get(&self, token: &str) -> Result<Value, String> {
         self.call("/api/launcher/cloud-settings", "GET", None, Some(token)).await
     }

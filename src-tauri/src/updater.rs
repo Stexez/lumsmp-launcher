@@ -262,10 +262,45 @@ async fn check_inner(app: &AppHandle, manual: bool) -> Result<UpdateEvent, Strin
 
     tokio::time::sleep(Duration::from_millis(1200)).await;
 
-    Command::new(&temp_path)
-        .arg("/S")
-        .spawn()
-        .map_err(|e| format!("Güncelleme kurulumu başlatılamadı: {}", e))?;
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let current_exe = std::env::current_exe()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_default();
+        let installer_str = temp_path.to_string_lossy().to_string();
+        let helper_cmd = std::env::temp_dir().join("lumsmp-update-relaunch.cmd");
+        let script = format!(
+            "@echo off\r\n\
+             timeout /t 2 /nobreak >nul\r\n\
+             start /wait \"\" \"{installer_str}\" /S\r\n\
+             timeout /t 1 /nobreak >nul\r\n\
+             if exist \"{current_exe}\" start \"\" \"{current_exe}\"\r\n\
+             del /q \"{installer_str}\" >nul 2>&1\r\n\
+             del /q \"%~f0\" >nul 2>&1\r\n"
+        );
+        if std::fs::write(&helper_cmd, script).is_ok() {
+            Command::new("cmd.exe")
+                .args(["/C", &helper_cmd.to_string_lossy()])
+                .creation_flags(CREATE_NO_WINDOW)
+                .spawn()
+                .map_err(|e| format!("Güncelleme yardımcısı başlatılamadı: {}", e))?;
+        } else {
+            Command::new(&temp_path)
+                .arg("/S")
+                .spawn()
+                .map_err(|e| format!("Güncelleme kurulumu başlatılamadı: {}", e))?;
+        }
+    }
+
+    #[cfg(not(windows))]
+    {
+        Command::new(&temp_path)
+            .arg("/S")
+            .spawn()
+            .map_err(|e| format!("Güncelleme kurulumu başlatılamadı: {}", e))?;
+    }
 
     app.exit(0);
     Ok(UpdateEvent {

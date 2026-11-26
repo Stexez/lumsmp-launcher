@@ -1,6 +1,6 @@
 [package]
 name = "lumsmp-launcher"
-version = "2.4.2"
+version = "2.5.0"
 description = "LumSMP Resmi Launcher (Rust + Tauri v2)"
 authors = ["LumCraft"]
 edition = "2021"

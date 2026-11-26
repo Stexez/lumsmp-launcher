@@ -246,6 +246,29 @@ async fn get_server_status(state: State<'_, AppState>) -> Result<Value, String> 
 }
 
 #[tauri::command]
+async fn get_store_products(state: State<'_, AppState>) -> Result<Value, String> {
+    let client = SiteClient::new(&state.cfg)?;
+    client.products().await
+}
+
+#[tauri::command]
+async fn refresh_news(state: State<'_, AppState>) -> Result<Option<String>, String> {
+    let client = SiteClient::new(&state.cfg)?;
+    Ok(client.public_news().await)
+}
+
+#[tauri::command]
+fn open_external_url(app: AppHandle, url: String) -> Result<(), String> {
+    let trimmed = url.trim();
+    if !(trimmed.starts_with("https://lumcraft.com.tr") || trimmed.starts_with("https://discord.gg/") || trimmed.starts_with("https://discord.com/")) {
+        return Err("Yalnızca resmi LumSMP adresleri açılabilir.".into());
+    }
+    tauri_plugin_opener::OpenerExt::opener(&app)
+        .open_url(trimmed, None::<&str>)
+        .map_err(|e| format!("Tarayıcı açılamadı: {e}"))
+}
+
+#[tauri::command]
 fn get_catalog() -> Vec<mods::CatalogMod> {
     mods::catalog()
 }
@@ -564,6 +587,9 @@ pub fn run() {
             ms_login,
             ms_logout,
             get_server_status,
+            get_store_products,
+            refresh_news,
+            open_external_url,
             get_catalog,
             get_shader_catalog,
             install_shader,

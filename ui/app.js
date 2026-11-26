@@ -7,6 +7,8 @@ const state = {
   catalog: [],
   shaderCatalog: [],
   packCatalog: [],
+  products: [],
+  storeCat: 'all',
   suspectMod: null,
   modCat: 'all',
   modQuery: '',
@@ -19,6 +21,14 @@ const CAT_LABELS = {
   animation: 'Animasyon',
   info: 'Harita & Bilgi',
   utility: 'Kolaylık',
+};
+
+const STORE_CATS = {
+  all: 'Tümü',
+  rank: 'VIP Rütbeler',
+  lumin: 'Lumin Paketleri',
+  cosmetic: 'Kozmetik',
+  key: 'Anahtarlar',
 };
 
 const STAGE_LABELS = {
@@ -38,11 +48,103 @@ const PRESETS = {
 
 const $ = (id) => document.getElementById(id);
 
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function showError(msg) {
   const el = $('homeError');
   if (!msg) { el.hidden = true; return; }
   el.textContent = msg;
   el.hidden = false;
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.nav-pill').forEach((b) => b.classList.toggle('active', b.dataset.tab === tabId));
+  document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+  const target = $(`tab-${tabId}`);
+  if (target) target.classList.add('active');
+  if (tabId === 'store') renderStore();
+  else if (tabId === 'shaders') renderShaders();
+  else if (tabId === 'packs') renderPacks();
+  else if (tabId === 'logs') refreshLogs();
+}
+
+function renderNews(rawText) {
+  const feed = $('newsFeed');
+  const text = (rawText || '').trim();
+  if (!text) {
+    feed.innerHTML = `
+      <div class="news-item highlight">✦ <strong>LumSMP 26.3</strong> — Oyun içi <strong>Sağ Shift</strong> menüsüyle HUD, Keystrokes, Crosshair, C-Zoom ve Spotify kontrolü aktif.</div>
+      <div class="news-item">★ <strong>Canlı Mağaza</strong> — Üst menüdeki <strong>Mağaza</strong> sekmesinden VIP rütbeleri ve Lumin paketlerini inceleyebilirsin.</div>
+      <div class="news-item">☁ <strong>Bulut Senkronizasyon</strong> — Ayarlar sekmesinden mod ve HUD konumlarını hesabına yedekleyebilirsin.</div>
+    `;
+    return;
+  }
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  feed.innerHTML = lines.map((line, i) => `
+    <div class="news-item ${i === 0 ? 'highlight' : ''}">${escapeHtml(line)}</div>
+  `).join('');
+}
+
+function renderMiniStore() {
+  const box = $('miniStoreList');
+  if (!state.products.length) {
+    box.innerHTML = '<div class="muted">Mağaza ürünlerine şu an ulaşılamadı.</div>';
+    return;
+  }
+  box.innerHTML = state.products.slice(0, 3).map((p) => `
+    <div class="mini-prod" data-open-store="1">
+      <div class="mini-prod-left">
+        <div class="prod-sym">${escapeHtml(p.symbol || '★')}</div>
+        <div style="min-width:0">
+          <div class="mini-prod-name">${escapeHtml(p.name)}</div>
+          <div class="mini-prod-tag">${escapeHtml(p.tag || STORE_CATS[p.category] || 'LumSMP')}</div>
+        </div>
+      </div>
+      <span class="price-pill">${escapeHtml(p.price)} ₺</span>
+    </div>
+  `).join('');
+  box.querySelectorAll('[data-open-store]').forEach((el) => {
+    el.onclick = () => switchTab('store');
+  });
+}
+
+function renderStore() {
+  const cats = Object.keys(STORE_CATS);
+  $('storeCats').innerHTML = cats
+    .map((c) => `<button class="cat-btn ${state.storeCat === c ? 'active' : ''}" data-scat="${c}">${STORE_CATS[c]}</button>`)
+    .join('');
+  $('storeCats').querySelectorAll('.cat-btn').forEach((b) => {
+    b.onclick = () => { state.storeCat = b.dataset.scat; renderStore(); };
+  });
+
+  const list = state.products.filter((p) => state.storeCat === 'all' || p.category === state.storeCat);
+  if (!list.length) {
+    $('storeGrid').innerHTML = '<div class="muted">Bu kategoride aktif ürün bulunamadı.</div>';
+    return;
+  }
+  $('storeGrid').innerHTML = list.map((p) => `
+    <div class="store-card">
+      <div class="store-card-top">
+        <div class="prod-sym">${escapeHtml(p.symbol || '★')}</div>
+        <span class="mini-badge">${escapeHtml(p.tag || STORE_CATS[p.category] || 'Ürün')}</span>
+      </div>
+      <h3 class="store-card-title">${escapeHtml(p.name)}</h3>
+      <p class="store-card-desc">${escapeHtml(p.description || '')}</p>
+      <div class="store-card-foot">
+        <span class="store-price">${escapeHtml(p.price)} ₺</span>
+        <button class="btn primary sm" data-buy-prod="${escapeHtml(p.id)}">Satın Al ↗</button>
+      </div>
+    </div>
+  `).join('');
+  $('storeGrid').querySelectorAll('[data-buy-prod]').forEach((btn) => {
+    btn.onclick = () => invoke('open_external_url', { url: 'https://lumcraft.com.tr/marketplace.html' });
+  });
 }
 
 function render() {
@@ -51,12 +153,7 @@ function render() {
   $('verBadge').textContent = `v${d.version}`;
   if ($('settingsVerBadge')) $('settingsVerBadge').textContent = `v${d.version}`;
 
-  if (d.announcement && d.announcement.trim()) {
-    $('announcementBar').textContent = d.announcement.trim();
-    if ($('announcementCard')) $('announcementCard').hidden = false;
-  } else {
-    if ($('announcementCard')) $('announcementCard').hidden = true;
-  }
+  renderNews(d.announcement);
 
   const siteName = d.siteUser?.minecraft_username || d.siteUser?.username || '';
   const mcName = d.mcProfile?.name || '';
@@ -65,10 +162,10 @@ function render() {
 
   $('siteUserVal').textContent = siteName || 'Bağlı değil';
   $('siteStatsVal').textContent = siteName
-    ? `${lumin != null ? `${lumin} Lumin` : 'Hesap aktif ✓'}${rank ? ` · ${rank}` : ''}`
-    : 'Oyuna girmek için lumcraft.com.tr hesabınla giriş yap';
-  $('btnSiteAuth').textContent = siteName ? 'Çıkış Yap' : 'Giriş Yap';
-  $('btnSiteAuth').className = siteName ? 'btn ghost' : 'btn primary';
+    ? `${lumin != null ? `${lumin} Lumin` : 'Oturum aktif ✓'}${rank ? ` · ${rank}` : ''}`
+    : 'Oyuna girmek için lumcraft.com.tr ile giriş yap';
+  $('btnSiteAuth').textContent = siteName ? 'Çıkış' : 'Giriş Yap';
+  $('btnSiteAuth').className = siteName ? 'btn ghost sm' : 'btn primary sm';
   if ($('siteBadge')) {
     $('siteBadge').textContent = siteName ? 'Bağlı ✓' : 'Gerekli';
     $('siteBadge').className = siteName ? 'mini-badge green-badge' : 'mini-badge';
@@ -76,47 +173,39 @@ function render() {
 
   if (mcName) {
     $('msUserVal').textContent = mcName;
-    $('msSubVal').textContent = 'Premium Microsoft oturumu ve skin aktif ✓';
-    $('btnMsAuth').textContent = 'Bağlantıyı Kes';
+    $('msSubVal').textContent = 'Premium oturum & skin aktif ✓';
+    $('btnMsAuth').textContent = 'Kes';
     $('btnMsAuth').disabled = false;
-    if ($('msBadge')) { $('msBadge').textContent = 'Premium ✓'; $('msBadge').className = 'mini-badge green-badge'; }
   } else if (d.msConfigured) {
     $('msUserVal').textContent = 'İsteğe bağlı';
-    $('msSubVal').textContent = 'Premium skin için Microsoft hesabını bağlayabilirsin';
-    $('btnMsAuth').textContent = 'Microsoft Bağla';
+    $('msSubVal').textContent = 'Premium hesabın varsa bağla';
+    $('btnMsAuth').textContent = 'Bağla';
     $('btnMsAuth').disabled = false;
-    if ($('msBadge')) { $('msBadge').textContent = 'İsteğe Bağlı'; $('msBadge').className = 'mini-badge muted-badge'; }
   } else {
     $('msUserVal').textContent = siteName ? `${siteName} (Site)` : 'İsteğe bağlı';
-    $('msSubVal').textContent = 'Microsoft gerekmeden site hesabınla direkt oynayabilirsin';
+    $('msSubVal').textContent = 'Site hesabıyla oynanabilir';
     $('btnMsAuth').textContent = 'Gerekmiyor';
     $('btnMsAuth').disabled = true;
-    if ($('msBadge')) { $('msBadge').textContent = 'Site Modu'; $('msBadge').className = 'mini-badge muted-badge'; }
   }
 
-  if ($('premiumWarnBar')) {
-    $('premiumWarnBar').hidden = Boolean(mcName);
-  }
+  if ($('premiumWarnBar')) $('premiumWarnBar').hidden = Boolean(mcName);
 
   const displayName = mcName || siteName;
-  $('sideName').textContent = displayName || 'Giriş Yapılmadı';
-  $('sideSub').textContent = siteName ? `lumcraft.com.tr · ${siteName}` : 'lumcraft.com.tr';
+  $('sideName').textContent = displayName || 'Giriş Yap';
   if (displayName) {
     $('sideAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(displayName)}/64`;
     $('sideAvatar').hidden = false;
-    if ($('sideAvatarFallback')) $('sideAvatarFallback').hidden = true;
-    if ($('heroSkinImg')) {
-      $('heroSkinImg').src = `https://mc-heads.net/body/${encodeURIComponent(displayName)}/150`;
-      $('heroSkinImg').hidden = false;
-    }
-    if ($('heroSkinFallback')) $('heroSkinFallback').hidden = true;
-    if ($('heroSkinTag')) $('heroSkinTag').textContent = displayName;
+    $('sideAvatarFallback').hidden = true;
+    $('heroSkinImg').src = `https://mc-heads.net/body/${encodeURIComponent(displayName)}/150`;
+    $('heroSkinImg').hidden = false;
+    $('heroSkinFallback').hidden = true;
+    $('heroSkinTag').textContent = displayName;
   } else {
     $('sideAvatar').hidden = true;
-    if ($('sideAvatarFallback')) $('sideAvatarFallback').hidden = false;
-    if ($('heroSkinImg')) $('heroSkinImg').hidden = true;
-    if ($('heroSkinFallback')) $('heroSkinFallback').hidden = false;
-    if ($('heroSkinTag')) $('heroSkinTag').textContent = 'LumSMP';
+    $('sideAvatarFallback').hidden = false;
+    $('heroSkinImg').hidden = true;
+    $('heroSkinFallback').hidden = false;
+    $('heroSkinTag').textContent = 'LumSMP';
   }
 
   const s = d.settings;
@@ -125,8 +214,8 @@ function render() {
   $('setRamRange').max = String(d.maxRamMb);
   $('setRamRange').value = String(s.ramMb);
   $('ramLabel').textContent = `${(s.ramMb / 1024).toFixed(1)} GB (${s.ramMb} MB)`;
-  if ($('ramRecMark')) $('ramRecMark').textContent = `Önerilen: ${(d.recommendedRamMb / 1024).toFixed(1)} GB`;
-  if ($('ramMaxMark')) $('ramMaxMark').textContent = `${Math.round(d.maxRamMb / 1024)} GB`;
+  $('ramRecMark').textContent = `Önerilen: ${(d.recommendedRamMb / 1024).toFixed(1)} GB`;
+  $('ramMaxMark').textContent = `${Math.round(d.maxRamMb / 1024)} GB`;
   $('ramManualRow').style.opacity = s.ramAuto ? '0.42' : '1';
   $('setRamRange').disabled = s.ramAuto;
   $('setPerfMode').value = s.perfMode;
@@ -141,7 +230,7 @@ function render() {
   });
 
   $('btnPlay').disabled = d.playing || !siteName;
-  $('btnPlay').textContent = d.playing ? 'OYUN AÇIK' : (siteName ? 'OYNA' : 'GİRİŞ YAP');
+  $('btnPlay').textContent = d.playing ? 'OYUN AÇIK' : (siteName ? '▶ OYNA' : 'GİRİŞ YAP');
 
   renderMods();
 }
@@ -166,11 +255,11 @@ function renderMods() {
   $('modGrid').innerHTML = list.map((m) => `
     <div class="mod-card">
       <div>
-        <div class="mod-title">${m.name}</div>
-        <div class="mod-desc">${m.desc}</div>
+        <div class="mod-title">${escapeHtml(m.name)}</div>
+        <div class="mod-desc">${escapeHtml(m.desc)}</div>
       </div>
       <label class="switch">
-        <input type="checkbox" data-slug="${m.slug}" ${selected.has(m.slug) ? 'checked' : ''} />
+        <input type="checkbox" data-slug="${escapeHtml(m.slug)}" ${selected.has(m.slug) ? 'checked' : ''} />
         <span></span>
       </label>
     </div>
@@ -196,10 +285,10 @@ async function renderShaders() {
   $('shaderStore').innerHTML = state.shaderCatalog.map((s) => `
     <div class="mod-card">
       <div>
-        <div class="mod-title">${s.name} <span class="badge-engine">${s.tier}</span></div>
-        <div class="mod-desc">${s.desc}</div>
+        <div class="mod-title">${escapeHtml(s.name)} <span class="mini-badge">${escapeHtml(s.tier)}</span></div>
+        <div class="mod-desc">${escapeHtml(s.desc)}</div>
       </div>
-      <button class="btn primary" data-install-shader="${s.slug}">İndir</button>
+      <button class="btn primary sm" data-install-shader="${escapeHtml(s.slug)}">İndir</button>
     </div>
   `).join('');
 
@@ -229,8 +318,8 @@ async function renderShaders() {
 async function refreshInstalledShaders() {
   const list = await invoke('list_shaders');
   $('shaderList').innerHTML = list.length
-    ? list.map((f) => `<div class="file-row"><span>${f.name} (${f.sizeKb} KB)</span><button class="btn ghost" data-del-shader="${f.name}">Sil</button></div>`).join('')
-    : '<div class="muted">Henüz yüklü shader yok. Yukarıdan tek tıkla indirebilirsin.</div>';
+    ? list.map((f) => `<div class="file-row"><span>${escapeHtml(f.name)} (${f.sizeKb} KB)</span><button class="btn ghost sm" data-del-shader="${escapeHtml(f.name)}">Sil</button></div>`).join('')
+    : '<div class="muted">Henüz yüklü shader yok.</div>';
   $('shaderList').querySelectorAll('[data-del-shader]').forEach((b) => {
     b.onclick = async () => {
       await invoke('delete_media', { sub: 'shaderpacks', name: b.dataset.delShader });
@@ -243,10 +332,10 @@ async function renderPacks() {
   $('packStore').innerHTML = state.packCatalog.map((s) => `
     <div class="mod-card">
       <div>
-        <div class="mod-title">${s.name} <span class="mini-badge">${s.tier}</span></div>
-        <div class="mod-desc">${s.desc}</div>
+        <div class="mod-title">${escapeHtml(s.name)} <span class="mini-badge">${escapeHtml(s.tier)}</span></div>
+        <div class="mod-desc">${escapeHtml(s.desc)}</div>
       </div>
-      <button class="btn primary" data-install-pack="${s.slug}">İndir</button>
+      <button class="btn primary sm" data-install-pack="${escapeHtml(s.slug)}">İndir</button>
     </div>
   `).join('');
 
@@ -276,8 +365,8 @@ async function renderPacks() {
 async function refreshInstalledPacks() {
   const list = await invoke('list_resourcepacks');
   $('packList').innerHTML = list.length
-    ? list.map((f) => `<div class="file-row"><span>${f.name} (${f.sizeKb} KB)</span><button class="btn ghost" data-del-pack="${f.name}">Sil</button></div>`).join('')
-    : '<div class="muted">Henüz yüklü kaynak paketi yok. Yukarıdan tek tıkla indirebilirsin.</div>';
+    ? list.map((f) => `<div class="file-row"><span>${escapeHtml(f.name)} (${f.sizeKb} KB)</span><button class="btn ghost sm" data-del-pack="${escapeHtml(f.name)}">Sil</button></div>`).join('')
+    : '<div class="muted">Henüz yüklü kaynak paketi yok.</div>';
   $('packList').querySelectorAll('[data-del-pack]').forEach((b) => {
     b.onclick = async () => {
       await invoke('delete_media', { sub: 'resourcepacks', name: b.dataset.delPack });
@@ -293,10 +382,10 @@ function renderAccountsModal() {
     ? list.map((u) => {
         const isAct = active && u.toLowerCase() === active.toLowerCase();
         return `<div class="file-row">
-          <span><strong>${u}</strong> ${isAct ? '<span class="mini-badge green-badge">Aktif</span>' : ''}</span>
+          <span><strong>${escapeHtml(u)}</strong> ${isAct ? '<span class="mini-badge green-badge">Aktif</span>' : ''}</span>
           <div class="row-gap">
-            ${isAct ? '' : `<button class="btn primary" data-switch-acc="${u}">Geç</button>`}
-            <button class="btn ghost" data-rem-acc="${u}">Sil</button>
+            ${isAct ? '' : `<button class="btn primary sm" data-switch-acc="${escapeHtml(u)}">Geç</button>`}
+            <button class="btn ghost sm" data-rem-acc="${escapeHtml(u)}">Sil</button>
           </div>
         </div>`;
       }).join('')
@@ -343,27 +432,47 @@ async function refreshStatus() {
     const max = typeof st?.max === 'number' ? st.max : (st?.players?.max ?? 100);
     $('serverStatusText').textContent = st?.online === false
       ? 'Sunucu bakımda'
-      : `LumSMP Çevrimiçi · ${online} / ${max} Oyuncu`;
+      : `Çevrimiçi · ${online} / ${max} Oyuncu`;
   } catch {
     $('serverStatusText').textContent = 'LumSMP · Bağlantı bekleniyor';
   }
+}
+
+async function loadStoreProducts() {
+  try {
+    const res = await invoke('get_store_products');
+    state.products = Array.isArray(res?.products) ? res.products : [];
+  } catch {
+    state.products = [];
+  }
+  renderMiniStore();
+  if ($('tab-store').classList.contains('active')) renderStore();
 }
 
 async function init() {
   $('btnMin').onclick = () => appWindow.minimize();
   $('btnClose').onclick = () => appWindow.close();
 
-  document.querySelectorAll('.nav-item').forEach((btn) => {
-    btn.onclick = () => {
-      document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
-      btn.classList.add('active');
-      $(`tab-${btn.dataset.tab}`).classList.add('active');
-      if (btn.dataset.tab === 'shaders') renderShaders();
-      else if (btn.dataset.tab === 'packs') renderPacks();
-      else if (btn.dataset.tab === 'logs') refreshLogs();
-    };
+  document.querySelectorAll('.nav-pill').forEach((btn) => {
+    btn.onclick = () => switchTab(btn.dataset.tab);
   });
+
+  $('btnGotoStore').onclick = () => switchTab('store');
+  $('btnOpenSite').onclick = () => invoke('open_external_url', { url: 'https://lumcraft.com.tr' });
+  $('btnOpenWebStore').onclick = () => invoke('open_external_url', { url: 'https://lumcraft.com.tr/marketplace.html' });
+  $('btnRefreshStore').onclick = loadStoreProducts;
+
+  $('btnRefreshNews').onclick = async () => {
+    const btn = $('btnRefreshNews');
+    btn.disabled = true;
+    try {
+      const fresh = await invoke('refresh_news');
+      if (state.data) state.data.announcement = fresh;
+      renderNews(fresh);
+    } finally {
+      btn.disabled = false;
+    }
+  };
 
   document.querySelectorAll('#profilePills .pill').forEach((btn) => {
     btn.onclick = () => updateSettings({ profile: btn.dataset.profile });
@@ -389,9 +498,9 @@ async function init() {
   $('setMinLaunch').onchange = (e) => updateSettings({ minimizeOnLaunch: e.target.checked });
 
   $('btnOpenGameDir').onclick = () => invoke('open_folder', { sub: '' });
-  if ($('btnSetOpenGame')) $('btnSetOpenGame').onclick = () => invoke('open_folder', { sub: '' });
-  if ($('btnSetOpenMods')) $('btnSetOpenMods').onclick = () => invoke('open_folder', { sub: 'mods' });
-  if ($('btnSetOpenBackups')) $('btnSetOpenBackups').onclick = () => invoke('open_folder', { sub: 'lumsmp-backups' });
+  $('btnSetOpenGame').onclick = () => invoke('open_folder', { sub: '' });
+  $('btnSetOpenMods').onclick = () => invoke('open_folder', { sub: 'mods' });
+  $('btnSetOpenBackups').onclick = () => invoke('open_folder', { sub: 'lumsmp-backups' });
   $('btnOpenShaders').onclick = () => invoke('open_folder', { sub: 'shaderpacks' });
   $('btnOpenPacks').onclick = () => invoke('open_folder', { sub: 'resourcepacks' });
 
@@ -410,58 +519,52 @@ async function init() {
     if (e.key === 'Escape') { $('accountsModal').hidden = true; $('loginModal').hidden = true; }
   });
 
-  if ($('btnBackupProfile')) {
-    $('btnBackupProfile').onclick = async () => {
-      const btn = $('btnBackupProfile');
-      btn.disabled = true;
-      btn.textContent = 'Yedekleniyor…';
-      try {
-        const res = await invoke('backup_profile');
-        $('updateStatusText').textContent = `✓ Yerel yedek alındı: ${res.folder} (${res.count} dosya).`;
-      } catch (e) {
-        $('updateStatusText').textContent = `Yedekleme hatası: ${e}`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Yerel Yedek Al';
-      }
-    };
-  }
+  $('btnBackupProfile').onclick = async () => {
+    const btn = $('btnBackupProfile');
+    btn.disabled = true;
+    btn.textContent = 'Yedekleniyor…';
+    try {
+      const res = await invoke('backup_profile');
+      $('updateStatusText').textContent = `✓ Yerel yedek alındı: ${res.folder} (${res.count} dosya).`;
+    } catch (e) {
+      $('updateStatusText').textContent = `Yedekleme hatası: ${e}`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Yerel Yedek Al';
+    }
+  };
 
-  if ($('btnCloudSave')) {
-    $('btnCloudSave').onclick = async () => {
-      const btn = $('btnCloudSave');
-      btn.disabled = true;
-      btn.textContent = 'Kaydediliyor…';
-      try {
-        await invoke('cloud_backup_settings');
-        $('updateStatusText').textContent = '✓ Mod, RAM ve oyun içi HUD ayarların lumcraft.com.tr bulutuna kaydedildi!';
-      } catch (e) {
-        $('updateStatusText').textContent = `Bulut hatası: ${e}`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '☁ Buluta Kaydet';
-      }
-    };
-  }
+  $('btnCloudSave').onclick = async () => {
+    const btn = $('btnCloudSave');
+    btn.disabled = true;
+    btn.textContent = 'Kaydediliyor…';
+    try {
+      await invoke('cloud_backup_settings');
+      $('updateStatusText').textContent = '✓ Mod, RAM ve oyun içi HUD ayarların lumcraft.com.tr bulutuna kaydedildi!';
+    } catch (e) {
+      $('updateStatusText').textContent = `Bulut hatası: ${e}`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '☁ Buluta Kaydet';
+    }
+  };
 
-  if ($('btnCloudRestore')) {
-    $('btnCloudRestore').onclick = async () => {
-      const btn = $('btnCloudRestore');
-      btn.disabled = true;
-      btn.textContent = 'Yükleniyor…';
-      try {
-        const res = await invoke('cloud_restore_settings');
-        if (res && res.settings) state.data.settings = res.settings;
-        render();
-        $('updateStatusText').textContent = '✓ Buluttaki mod ve HUD ayarların başarıyla geri yüklendi!';
-      } catch (e) {
-        $('updateStatusText').textContent = `Bulut hatası: ${e}`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '☁ Buluttan Yükle';
-      }
-    };
-  }
+  $('btnCloudRestore').onclick = async () => {
+    const btn = $('btnCloudRestore');
+    btn.disabled = true;
+    btn.textContent = 'Yükleniyor…';
+    try {
+      const res = await invoke('cloud_restore_settings');
+      if (res && res.settings) state.data.settings = res.settings;
+      render();
+      $('updateStatusText').textContent = '✓ Buluttaki mod ve HUD ayarların başarıyla geri yüklendi!';
+    } catch (e) {
+      $('updateStatusText').textContent = `Bulut hatası: ${e}`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '☁ Buluttan Yükle';
+    }
+  };
 
   const stage = $('skinStage');
   const skinImg = $('heroSkinImg');
@@ -487,6 +590,7 @@ async function init() {
     await updateSettings({ mods: nextMods });
     $('btnPlay').click();
   };
+
   $('btnRefreshLogs').onclick = refreshLogs;
   $('btnCopyLogs').onclick = async () => {
     await navigator.clipboard.writeText($('logBox').textContent);
@@ -623,6 +727,7 @@ async function init() {
   state.data = await invoke('bootstrap');
   render();
   refreshStatus();
+  loadStoreProducts();
   setInterval(refreshStatus, 30000);
 }
 
