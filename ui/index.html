@@ -52,11 +52,12 @@
       <header class="titlebar" data-tauri-drag-region>
         <div class="title-left" data-tauri-drag-region>
           <span class="wordmark">LUM<span>SMP</span></span>
-          <span class="ver-tag" id="verBadge">v2.6.0</span>
+          <span class="ver-tag" id="verBadge">v2.7.0</span>
           <span class="online-pill"><i class="dot"></i><span id="serverStatusText">Sunucu kontrol ediliyor…</span></span>
+          <button class="ip-pill" id="btnCopyIp" type="button" title="Sunucu adresini kopyala">lumcraft.com.tr <small id="ipCopyHint">Kopyala</small></button>
         </div>
         <div class="title-right">
-          <button class="top-link" id="btnOpenSite" type="button">lumcraft.com.tr ↗</button>
+          <button class="top-link" id="btnOpenSite" type="button">Site ↗</button>
           <div class="win-btns">
             <button class="win-btn" id="btnMin" title="Küçült">—</button>
             <button class="win-btn close" id="btnClose" title="Kapat">×</button>
@@ -80,6 +81,22 @@
                 <h1 class="display-title">LUM<span>SMP</span></h1>
                 <p class="display-sub">Korumalı giriş, oyun içi <strong>Sağ Shift</strong> HUD, Keystrokes, C-Zoom ve Spotify kontrolü.</p>
 
+                <!-- QUICK INTERACTIVE STATS STRIP -->
+                <div class="quick-stats">
+                  <button class="qstat" id="qstatMods" type="button">
+                    <span class="qstat-k">AKTİF MOD</span>
+                    <strong id="qstatModsVal">7 Mod</strong>
+                  </button>
+                  <button class="qstat" id="qstatRam" type="button">
+                    <span class="qstat-k">BELLEK</span>
+                    <strong id="qstatRamVal">4.0 GB</strong>
+                  </button>
+                  <button class="qstat accent-qstat" id="qstatStore" type="button">
+                    <span class="qstat-k">MAĞAZA</span>
+                    <strong>Vitrine Git →</strong>
+                  </button>
+                </div>
+
                 <!-- CLEAN FROSTED NEWS FEED -->
                 <div class="glass-panel news-box">
                   <div class="box-head">
@@ -98,6 +115,7 @@
                   <img class="char-img" id="heroSkinImg" src="" alt="" hidden />
                   <div class="char-empty" id="heroSkinFallback">L</div>
                   <div class="char-glow"></div>
+                  <div class="char-nametag" id="heroNameTag">LumSMP</div>
                 </div>
 
                 <div class="glass-panel account-card">
@@ -240,6 +258,7 @@
               <p class="muted">Canlı Minecraft çıktısı ve hata teşhisi.</p>
             </div>
             <div class="row-gap">
+              <button class="btn ghost" id="btnLogErrorsOnly">Sadece Hatalar</button>
               <button class="btn ghost" id="btnRefreshLogs">Yenile</button>
               <button class="btn primary" id="btnCopyLogs">Logu Kopyala</button>
             </div>
@@ -323,8 +342,16 @@
             </div>
 
             <div class="surface-box set-card">
+              <div class="box-label">GÖRÜNÜM &amp; TEMA</div>
+              <div class="set-title">Launcher Vurgu Rengi</div>
+              <div class="theme-row" id="themePicker">
+                <button class="theme-swatch active" data-theme="gold" type="button"><i style="background:#f4c459"></i>Altın</button>
+                <button class="theme-swatch" data-theme="purple" type="button"><i style="background:#b07cff"></i>Ametist</button>
+                <button class="theme-swatch" data-theme="emerald" type="button"><i style="background:#34d399"></i>Zümrüt</button>
+                <button class="theme-swatch" data-theme="crimson" type="button"><i style="background:#fb7185"></i>Kızıl</button>
+              </div>
+              <div class="hairline"></div>
               <div class="box-label">SİSTEM, BULUT &amp; YEDEK</div>
-              <div class="set-title">Senkronizasyon &amp; Güncelleme</div>
               <p class="muted" id="updateStatusText">Launcher açılışta yeni sürümleri otomatik kontrol eder.</p>
               <div class="row-gap wrap">
                 <button class="btn primary sm" id="btnCheckUpdate">Güncelleme Kontrol Et</button>
@@ -378,6 +405,7 @@
     </div>
   </div>
 
+  <div class="toast" id="toast" hidden></div>
   <script src="app.js"></script>
 </body>
 </html>

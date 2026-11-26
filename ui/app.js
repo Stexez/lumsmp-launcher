@@ -12,7 +12,28 @@ const state = {
   suspectMod: null,
   modCat: 'all',
   modQuery: '',
+  logErrorsOnly: false,
+  rawLogs: '',
 };
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = $('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+}
+
+function applyTheme(name) {
+  const valid = ['gold', 'purple', 'emerald', 'crimson'].includes(name) ? name : 'gold';
+  document.documentElement.dataset.theme = valid;
+  localStorage.setItem('lumsmp_theme', valid);
+  document.querySelectorAll('#themePicker .theme-swatch').forEach((b) => {
+    b.classList.toggle('active', b.dataset.theme === valid);
+  });
+}
 
 const CAT_LABELS = {
   all: 'Tümü',
@@ -161,6 +182,7 @@ function render() {
   $('premiumWarnBar').hidden = Boolean(mcName);
 
   const displayName = mcName || siteName;
+  if ($('heroNameTag')) $('heroNameTag').textContent = displayName || 'LumSMP';
   if (displayName) {
     $('sideAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(displayName)}/64`;
     $('sideAvatar').hidden = false;
@@ -177,6 +199,8 @@ function render() {
 
   const s = d.settings;
   $('setupSummary').textContent = `${s.mods.length} Mod · ${(s.ramMb / 1024).toFixed(1)} GB RAM`;
+  if ($('qstatModsVal')) $('qstatModsVal').textContent = `${s.mods.length} Mod`;
+  if ($('qstatRamVal')) $('qstatRamVal').textContent = `${(s.ramMb / 1024).toFixed(1)} GB`;
   $('setRamAuto').checked = s.ramAuto;
   $('setRamRange').max = String(d.maxRamMb);
   $('setRamRange').value = String(s.ramMb);
@@ -377,7 +401,18 @@ function renderAccountsModal() {
 }
 
 async function refreshLogs() {
-  $('logBox').textContent = await invoke('read_game_log');
+  state.rawLogs = await invoke('read_game_log');
+  renderLogs();
+}
+
+function renderLogs() {
+  const txt = state.rawLogs || '';
+  if (!state.logErrorsOnly) {
+    $('logBox').textContent = txt;
+  } else {
+    const filtered = txt.split(/\r?\n/).filter((l) => /error|exception|fatal|crash|warn|caused by/i.test(l)).join('\n');
+    $('logBox').textContent = filtered || 'Log dosyasında hata veya uyarı bulunamadı ✓';
+  }
   $('logBox').scrollTop = $('logBox').scrollHeight;
 }
 
@@ -416,8 +451,32 @@ async function loadStoreProducts() {
 }
 
 async function init() {
+  applyTheme(localStorage.getItem('lumsmp_theme') || 'gold');
+  document.querySelectorAll('#themePicker .theme-swatch').forEach((b) => {
+    b.onclick = () => { applyTheme(b.dataset.theme); showToast('Tema güncellendi ✓'); };
+  });
+
   $('btnMin').onclick = () => appWindow.minimize();
   $('btnClose').onclick = () => appWindow.close();
+
+  if ($('btnCopyIp')) {
+    $('btnCopyIp').onclick = async () => {
+      await navigator.clipboard.writeText('lumcraft.com.tr');
+      $('ipCopyHint').textContent = 'Kopyalandı ✓';
+      showToast('lumcraft.com.tr panoya kopyalandı!');
+      setTimeout(() => { $('ipCopyHint').textContent = 'Kopyala'; }, 1600);
+    };
+  }
+  if ($('qstatMods')) $('qstatMods').onclick = () => switchTab('mods');
+  if ($('qstatRam')) $('qstatRam').onclick = () => switchTab('settings');
+  if ($('qstatStore')) $('qstatStore').onclick = () => switchTab('store');
+  if ($('btnLogErrorsOnly')) {
+    $('btnLogErrorsOnly').onclick = () => {
+      state.logErrorsOnly = !state.logErrorsOnly;
+      $('btnLogErrorsOnly').className = state.logErrorsOnly ? 'btn primary' : 'btn ghost';
+      renderLogs();
+    };
+  }
 
   document.querySelectorAll('.rail-btn[data-tab]').forEach((btn) => {
     btn.onclick = () => switchTab(btn.dataset.tab);
